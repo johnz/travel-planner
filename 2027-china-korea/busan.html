@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>釜山三晚 · 海云台出发互动地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --bg:#f5f8f6; --panel:#fff; --panel2:#e9f3f2; --line:#d9e5e3; --text:#173843; --muted:#607b83; --gold:#d98232; --blue:#2a91b8; --pink:#d77975; --green:#5da47e; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+    button,input,a { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; }
+    .app { display:grid; grid-template-columns:minmax(350px,410px) minmax(0,1fr); min-height:850px; }
+    .sidebar { display:flex; flex-direction:column; min-height:850px; max-height:850px; overflow-y:auto; border-right:1px solid var(--line); background:linear-gradient(160deg,#fff,#f3f8f7 72%); z-index:2; }
+    .intro { padding:26px 25px 18px; border-bottom:1px solid var(--line); }
+    .eyebrow { display:flex; align-items:center; gap:8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    .eyebrow:before { content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold); }
+    h1 { margin:13px 0 7px; font-size:29px; line-height:1.24; letter-spacing:-.04em; }
+    .sub { margin:0; font-size:13px; line-height:1.7; color:var(--muted); }
+    .tripline { display:flex; flex-wrap:wrap; gap:7px; margin-top:16px; }
+    .tripline span { padding:7px 10px; border:1px solid #d2e2e1; border-radius:100px; background:#edf5f4; font-size:11px; font-weight:700; }
+    .home { display:flex; align-items:center; gap:12px; margin-top:17px; padding:13px; border:1px solid #ebc495; border-radius:15px; background:#fff7ed; text-decoration:none; }
+    .homeicon { display:grid; place-items:center; flex:none; width:37px; height:37px; border-radius:12px; background:var(--gold); color:#fff; font-size:19px; }
+    .home strong { display:block; font-size:13px; }
+    .home small { display:block; margin-top:3px; font-size:11px; color:var(--muted); }
+    .home-arrow { margin-left:auto; color:var(--gold); font-size:20px; }
+    .controls { padding:15px 25px 13px; border-bottom:1px solid var(--line); }
+    .search { display:flex; align-items:center; gap:9px; padding:0 12px; height:39px; border:1px solid #cbdcda; border-radius:10px; background:#fff; color:var(--muted); }
+    .search input { width:100%; border:0; outline:0; background:transparent; color:var(--text); font-size:13px; }
+    .search input::placeholder { color:#79919a; }
+    .filters { display:flex; gap:6px; overflow-x:auto; margin-top:11px; padding-bottom:3px; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .filter { flex:none; padding:7px 10px; border:1px solid #cbdcda; border-radius:100px; background:#fff; color:var(--muted); font-size:11px; font-weight:700; }
+    .filter.active { border-color:#176b7b; background:#176b7b; color:#fff; }
+    .watchlist { margin:10px 17px 0; border:1px solid #cbdcda; border-radius:12px; background:#fff; font-size:11px; }
+    .watchlist summary { display:flex; align-items:center; justify-content:space-between; padding:11px 13px; color:#173843; font-weight:800; cursor:pointer; list-style:none; }
+    .watchlist summary::-webkit-details-marker { display:none; }
+    .watchlist summary span { color:#607b83; font-weight:600; }
+    .watchlist[open] summary { border-bottom:1px solid var(--line); }
+    .watchlist-body { max-height:230px; overflow-y:auto; padding:2px 13px 10px; color:#4c6972; line-height:1.55; }
+    .watchlist-body p { margin:9px 0 6px; }
+    .watchlist-body ul { margin:0; padding-left:18px; }
+    .watchlist-body li { margin:7px 0; }
+    .watchlist-body a { color:#176b7b; font-weight:700; }
+    .ticket-list { display:grid; gap:9px; margin:10px 0; }
+    .ticket-item { padding:9px 10px; border:1px solid #dce9e6; border-radius:9px; background:#f8fbfa; }
+    .ticket-item strong { display:block; color:#173843; font-size:12px; }
+    .ticket-item p { margin:4px 0; }
+    .ticket-note { color:#8a5a27; font-weight:700; }
+    .itinerary { margin:10px 17px 0; border:1px solid #b7d7d3; border-radius:12px; background:#f5fbf9; font-size:11px; }
+    .itinerary summary { display:flex; align-items:center; justify-content:space-between; padding:11px 13px; font-weight:800; cursor:pointer; list-style:none; }
+    .itinerary summary::-webkit-details-marker { display:none; }
+    .itinerary summary span { color:var(--muted); font-weight:600; }
+    .itinerary[open] summary { border-bottom:1px solid var(--line); }
+    .days { max-height:320px; overflow-y:auto; padding:7px 12px 9px; -webkit-overflow-scrolling:touch; }
+    .day { padding:8px 2px; border-bottom:1px solid var(--line); line-height:1.5; }
+    .day:last-child { border-bottom:0; }
+    .day strong { display:block; margin-bottom:2px; font-size:11px; }
+    .day p { margin:2px 0; color:#4c6972; }
+    .day em { color:#9b622c; font-style:normal; font-weight:700; }
+    .extras { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:7px; }
+    .extras-label { color:#55747c; font-size:10px; font-weight:800; }
+    .spot-link { padding:4px 7px; border:1px solid #bfd8d6; border-radius:7px; background:#fff; color:#176b7b; font-size:10px; font-weight:700; }
+    .spot-link:hover,.spot-link:focus-visible { background:#e1f2ef; outline:2px solid #8ac6c0; outline-offset:1px; }
+    .extra-note { margin-top:4px!important; font-size:10px; }
+    .listbar { display:flex; justify-content:space-between; padding:13px 25px 7px; font-size:11px; color:var(--muted); }
+    .listbar strong { color:var(--text); font-size:12px; }
+    .places { flex:none; padding:4px 17px 22px; scrollbar-color:#bad0cf transparent; }
+    .place { display:grid; grid-template-columns:32px 1fr auto; align-items:center; gap:11px; width:100%; margin:6px 0; padding:12px 11px; border:1px solid transparent; border-radius:13px; background:transparent; color:var(--text); text-align:left; }
+    .place:hover,.place:focus-visible { background:#eaf4f3; outline:none; }
+    .place.selected { border-color:#8bbdbe; background:#e3f1ef; }
+    .placeicon { display:grid; place-items:center; width:32px; height:32px; border-radius:10px; background:#e8f1f1; font-size:16px; }
+    .place[data-type="sight"] .placeicon { background:rgba(117,204,232,.15); }
+    .place[data-type="food"] .placeicon { background:rgba(242,154,152,.15); }
+    .place[data-type="mall"] .placeicon { background:rgba(158,213,173,.15); }
+    .place[data-type="transport"] .placeicon { background:rgba(177,160,217,.2); }
+    .place[data-type="stay"] .placeicon { background:rgba(233,168,80,.18); }
+    .place strong { display:block; font-size:13px; line-height:1.35; }
+    .place small { display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.4; }
+    .distance { color:#53707a; font-size:10px; white-space:nowrap; }
+    .empty { padding:22px 12px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .mapwrap { position:relative; min-height:850px; background:#eef3f1; }
+    #map { position:absolute; inset:0; z-index:0; }
+    .map-fallback { display:none; position:absolute; top:20px; left:20px; right:20px; z-index:1; padding:14px; border:1px solid #d9e5e3; border-radius:10px; background:#fff; color:#173843; box-shadow:0 10px 35px #0002; font-size:13px; }
+    .maptools { position:absolute; top:18px; right:18px; z-index:500; display:flex; flex-direction:column; gap:8px; }
+    .maptools button { padding:10px 13px; border:1px solid #c9d9db; border-radius:10px; background:#fff; color:#183040; font-size:12px; font-weight:800; box-shadow:0 5px 20px #061b2b2c; }
+    .maptools button:hover { background:#eaf3f4; }
+    .detail { position:absolute; right:18px; bottom:25px; left:18px; z-index:500; max-width:430px; padding:18px 20px 17px; border:1px solid #c9dbdc; border-radius:17px; background:rgba(255,255,255,.97); color:#193040; box-shadow:0 16px 55px #061b2b40; backdrop-filter:blur(12px); }
+    .detail-kind { color:#507183; font-size:11px; font-weight:800; letter-spacing:.1em; }
+    .detail h2 { margin:6px 0 7px; font-size:20px; line-height:1.3; }
+    .detail p { margin:0; color:#496371; font-size:12px; line-height:1.7; }
+    .detail-meta { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 13px; }
+    .detail-meta span { padding:5px 8px; border-radius:7px; background:#e8f0f1; color:#34596c; font-size:10px; font-weight:800; }
+    .detail-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .detail-actions a { padding:9px 12px; border-radius:9px; background:#143b4f; color:#fff; text-decoration:none; font-size:11px; font-weight:800; }
+    .detail-actions a.secondary { background:#e8f0f1; color:#245267; }
+    .note { position:absolute; top:18px; left:18px; z-index:500; max-width:310px; padding:10px 12px; border:1px solid #d5e2e2; border-radius:10px; background:rgba(255,255,255,.95); color:#385965; font-size:11px; line-height:1.5; box-shadow:0 5px 20px #061b2b18; }
+    .leaflet-tile-pane { filter:saturate(.8) contrast(.82) brightness(1.08); }
+    .pin { width:32px; height:32px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#22465a; font-size:16px; box-shadow:0 3px 12px #17384c88; transition:transform .15s; }
+    .pin.sight { background:#4e9fc0; } .pin.food { background:#d77975; } .pin.mall { background:#6aaf83; } .pin.transport { background:#8e74b8; } .pin.homepin { background:#e9a850; } .pin.stay { background:#f0b866; }
+    .pin.selected { transform:scale(1.26); box-shadow:0 0 0 5px #fff8,0 5px 16px #17384c88; }
+    .leaflet-div-icon { border:0; background:transparent; }
+    .leaflet-control-attribution { font-size:9px!important; }
+    @media(max-width:850px) {
+      .app { display:flex; flex-direction:column; }
+      .sidebar { max-height:none; min-height:0; overflow:visible; border-right:0; }
+      .intro { padding:19px 18px 15px; }
+      h1 { font-size:24px; }
+      .controls { padding:13px 18px 11px; }
+      .listbar { padding:11px 18px 6px; }
+      .places { max-height:248px; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:3px 11px 15px; }
+      .mapwrap { min-height:530px; }
+      #map { min-height:530px; }
+      .note { top:12px; left:12px; max-width:210px; }
+      .maptools { top:12px; right:12px; }
+      .detail { right:12px; bottom:20px; left:12px; max-width:none; padding:14px 16px; }
+    }
+    @media(max-width:470px) { .detail h2 { font-size:17px; } .detail p { font-size:11px; } .maptools button { padding:8px; font-size:11px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" aria-label="地点清单">
+      <header class="intro">
+        <div class="eyebrow">Busan · winter 2027</div>
+        <h1>住在海云台，轻松玩釜山</h1>
+        <p class="sub">住处还没订。暂以海云台站一带（几间候选都在这里）作为距离基点；订房后再换成实际地址。</p>
+        <div class="tripline"><span>1月5日—8日 · 3晚</span><span>家庭出行</span></div>
+        <div class="tripline"><span>✈ 1月5日 11:45 抵达 PUS 国际线</span><span>🚄 1月8日 约14:00 釜山站 KTX</span></div>
+        <a class="home" href="https://www.airbnb.co.nz/s/Haeundae-gu--Busan--South-Korea/homes" target="_blank" rel="noopener noreferrer">
+          <span class="homeicon">⌂</span><span><strong>海云台站一带 · 住处待定</strong><small>多间候选 · 位置均为估算</small></span><span class="home-arrow">↗</span>
+        </a>
+      </header>
+      <details class="itinerary" open>
+        <summary>🗓 三晚行程草案 <span>已加入收藏美食 · 内部可滚动 ▾</span></summary>
+        <div class="days">
+          <div class="day"><strong>1/5 周二 · 抵达</strong><p>11:45 航班到金海机场国际线；入境取行李后去明知见朋友、咖啡街看海。</p><p>晚餐：韩式烤肉；或回海云台吃猪肉汤饭。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="airport">金海机场</button><button class="spot-link" type="button" data-spot="myeongji">明知咖啡街</button><button class="spot-link" type="button" data-spot="miryang-gukbap">海云台汤饭</button></div><p class="extra-note">明知在机场附近、海云台在城东，打车约 1 小时；行李先寄放还是直接带着，等住处定了再排。</p></div>
+          <div class="day"><strong>1/6 周三 · 海云台亲子日</strong><p>午餐尾浦家（酱蟹拼盘＋给孩子点砂锅饭），饭后从旁边美浦站坐胶囊列车去青沙浦。</p><p>下午 SEA LIFE 2–3 小时；傍晚广安里看大桥，回程顺路 The Bay 101 夜景。夜宵蚂蚁家章鱼肠锅。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="mipojip">尾浦家</button><button class="spot-link" type="button" data-spot="mipo">美浦站</button><button class="spot-link" type="button" data-spot="cheongsapo">青沙浦站</button><button class="spot-link" type="button" data-spot="sealife">SEA LIFE</button><button class="spot-link" type="button" data-spot="gwangalli">广安里</button><button class="spot-link" type="button" data-spot="bay101">The Bay 101</button><button class="spot-link" type="button" data-spot="gaemijip">蚂蚁家</button></div><p class="extra-note">市场糖饼、活章鱼可穿插；活章鱼只给大人吃。胶囊列车常需提前订时段。</p></div>
+          <div class="day"><strong>1/7 周四 · 乐天世界</strong><p>09:30–17:00 Lotte World Adventure Busan：旋转木马、童话区、家庭过山车、巡游。</p><p>晚餐：机张市场蒸帝王蟹/雪蟹（打车约 10 分钟），代替原定韩牛烤肉。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="lotte">乐天世界</button><button class="spot-link" type="button" data-spot="gijang-market">机张市场</button></div><p class="extra-note">冬季营业时间、巡游场次和身高限制待核实。</p></div>
+          <div class="day"><strong>1/8 周五 · 去首尔</strong><p>早上海东龙宫寺 → 10:00 机张末家鲍鱼粥 → 回住处取行李退房。</p><p>午餐釜山站旁本钱猪肉汤饭；约 14:00 KTX 去首尔。<em>车次尚未预订。</em></p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="yonggungsa">海东龙宫寺</button><button class="spot-link" type="button" data-spot="gijang-kkeutjip">机张末家</button><button class="spot-link" type="button" data-spot="bonjeon-gukbap">本钱汤饭</button><button class="spot-link" type="button" data-spot="busanstn">釜山站</button></div><p class="extra-note">机张 → 海云台 → 釜山站带行李很赶；退房可以提前到早上，行李寄放在釜山站储物柜。</p></div>
+          <div class="day"><strong>南浦一带 · 还没排进去</strong><p>甘川洞文化村、札嘎其市场、BIFF 糖饼、蚂蚁家本店都在城西南浦，离海云台约 1 小时。</p><p>要去就得腾出半天：可以替换 1/8 的龙宫寺＋鲍鱼粥（南浦离釜山站近，顺路去搭 KTX），或者放在 1/5 下午。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="gamcheon">甘川洞</button><button class="spot-link" type="button" data-spot="jagalchi">札嘎其市场</button><button class="spot-link" type="button" data-spot="biff-hotteok">BIFF 糖饼</button></div><p class="extra-note">札嘎其市场每月第 1、3 个周二可能休市，1/5 去要先查。</p></div>
+        </div>
+      </details>
+      <details class="watchlist">
+        <summary>🏠 住宿候选 <span>1/5–1/8 三晚总价 ▾</span></summary>
+        <div class="watchlist-body">
+          <p>三晚总价（NZD，2 大 1 小），2026 年 11 月 9 日查询。Airbnb 图钉按房源描述估算，不是实际地址。</p>
+          <p><strong>第一批候选</strong></p>
+          <ul>
+            <li><a href="https://www.airbnb.co.nz/rooms/1640299361936942982?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">Eden</a>：$499，5.0（68 条，按最低分排序也全是 5 星）。海里团街老房改造一楼，3 卧，浴室矮小；12/22 前免费取消。</li>
+            <li><a href="https://www.airbnb.co.nz/rooms/1444670990722253055?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">Villa de EL 一楼</a>：$708，4.96（91 条）。独栋一楼、2 卧、每间有暖气，海云台站 1 分钟。<em>坑：</em>燃油锅炉，热水要先设定（1 月有人投诉）。订后 24 小时内才免费取消。</li>
+            <li><a href="https://www.airbnb.co.nz/rooms/1450428155979442073?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">Villa de EL 二楼</a>：$695，4.92（106 条）。<em>坑多：</em>两条 2 星——冬天零下热水不够（房东称已换大锅炉）、浴室很小且无淋浴间、有霉味、照片比实际新；需走楼梯。不推荐。</li>
+            <li><a href="https://www.airbnb.co.nz/rooms/1760597225090535409?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">Opening Special</a>：$606，5.0（仅 10 条）。高楼海景，2 卧，海滩 2 分钟；评价太少，12/6 前免费取消。</li>
+          </ul>
+          <p><strong>Airbnb 新找到</strong></p>
+          <ul>
+            <li><a href="https://www.airbnb.co.nz/rooms/1434394352816664679?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">海云台站 5 分钟独栋</a>：<strong>$391</strong>（原 $492），4.93（107 条，无低分）。2 间真卧室（2 张 queen ＋ 1 张 king）。<em>注意：</em>约 35 级楼梯没电梯；热水要按锅炉按钮。</li>
+            <li><a href="https://www.airbnb.co.nz/rooms/1024425310581312497?check_in=2027-01-05&amp;check_out=2027-01-08&amp;adults=2&amp;children=1" target="_blank" rel="noopener noreferrer">海边独栋 99㎡</a>：$520，4.9（81 条）。唯一写明面积的；3 楼无电梯。</li>
+            <li>已排除：BM_01 海景（$494，第二间“卧室”是客厅床）；Haeundae Sensation（$602，有人投诉其实只有一间房，老楼无电梯）。</li>
+          </ul>
+          <p><strong>Trip.com 两卧整套（酒店式，有前台、有电梯）</strong></p>
+          <ul>
+            <li>W Residence Hotel Centumcity：<strong>$576</strong>，8.6（200 条），99㎡，免费取消。在 Centum City，挨着新世界百货和 Spa Land，冬天下雨也好逛；离海云台 2.8 公里。</li>
+            <li>Palatium Haeundae by SONO Felice：$935，9.3（373 条），2026 年新开，86㎡，免费取消。</li>
+            <li>LCT Residence：$987，9.4（375 条），165㎡，海景，免费取消。</li>
+            <li>NewCZ Haeundae Residence：$884，8.7，93㎡（不可免费取消）。Heridan Stay $478 但两卧只有 33㎡，太挤。</li>
+          </ul>
+        </div>
+      </details>
+      <section class="controls" aria-label="筛选地点">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索机场、车站、景点" autocomplete="off" aria-label="搜索地点"></label>
+        <div class="filters" id="filters">
+          <button class="filter active" data-filter="all" type="button">全部</button>
+          <button class="filter" data-filter="sight" type="button">景点</button>
+          <button class="filter" data-filter="food" type="button">吃东西</button>
+          <button class="filter" data-filter="stay" type="button">住宿候选</button>
+          <button class="filter" data-filter="transport" type="button">机场车站</button>
+        </div>
+      </section>
+      <div class="listbar"><strong>地点清单</strong><span id="count"></span></div>
+      <div class="places" id="places" aria-live="polite"></div>
+    </aside>
+    <section class="mapwrap" aria-label="釜山互动地图">
+      <div id="map"></div>
+      <div class="map-fallback" id="fallback">底图暂时无法加载。地点清单仍可使用，点击地点后可打开 Naver 地图。</div>
+      <div class="note">虚线和数字是从海云台站一带算起的<strong>直线距离</strong>，不是步行或车程。</div>
+      <div class="maptools"><button id="nearby" type="button">看海云台</button><button id="airportbtn" type="button">✈ 看机场</button><button id="stationbtn" type="button">🚄 看釜山站</button><button id="overview" type="button">看全部地点</button></div>
+      <article class="detail" id="detail" aria-live="polite"></article>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // WGS84 coordinates from OpenStreetMap/Nominatim. The stay is not booked: "home" marks the
+    // Haeundae Station area, and Airbnb candidate pins are estimated from listing descriptions.
+    const home = { id:'home', name:'海云台站一带 · 住处待定', type:'home', icon:'⌂', lat:35.163753, lon:129.158747,
+      area:'海云台区 · 地铁 2 号线海云台站', blurb:'住处还没订。候选都在海云台站与海云台海滩之间，暂以海云台站作为距离基点；订房后换成实际地址。',
+      source:'https://www.airbnb.co.nz/s/Haeundae-gu--Busan--South-Korea/homes', search:'해운대역' };
+    const spots = [
+      {id:'airport',name:'金海国际机场 · 国际线航站楼',type:'transport',icon:'✈',lat:35.172316,lon:128.945886,area:'江西区 · PUS',blurb:'1 月 5 日航班11:45 抵达国际线。到海云台可坐机场巴士或出租车，大约 1 小时左右；也可先去附近的明知见朋友。',tag:'1/5 抵达',source:'https://www.airport.co.kr/gimhaeeng/index.do',search:'김해국제공항 국제선'},
+      {id:'busanstn',name:'釜山站 · KTX',type:'transport',icon:'🚄',lat:35.115553,lon:129.042587,area:'东区 · 地铁 1 号线',blurb:'1 月 8 日约 14:00 乘 KTX 去首尔，约 2 小时 30 分钟到首尔站。车次尚未预订；午餐可在车站附近解决。从海云台过去地铁需换乘（2 号线→西面→1 号线）。',tag:'1/8 去首尔',source:'https://www.letskorail.com/',search:'부산역'},
+      {id:'haeundaestn',name:'海云台站 · 地铁 2 号线',type:'transport',icon:'🚇',lat:35.163753,lon:129.158747,area:'海云台区',blurb:'海云台一带的地铁站，候选住处大多在步行几分钟内。去广安里、西面、釜山站都从这里坐 2 号线。',tag:'地铁 · 住处附近',source:'https://www.humetro.busan.kr/',search:'해운대역'},
+      {id:'myeongji',name:'明知 · 海边咖啡街一带',type:'sight',icon:'☕',lat:35.087522,lon:128.906872,area:'江西区明知新城',blurb:'1 月 5 日下午与朋友见面、喝咖啡看海。图钉标在明知海边公园一带，具体咖啡店和见面地点以朋友安排为准。离机场较近，离海云台较远。',tag:'1/5 · 见朋友',source:'https://www.openstreetmap.org/search?query=%EB%AA%85%EC%A7%80%20%EC%98%A4%EC%85%98%EC%8B%9C%ED%8B%B0',search:'명지 카페거리'},
+      {id:'beach',name:'海云台海滩',type:'sight',icon:'🏖',lat:35.157781,lon:129.158132,area:'海云台区',blurb:'住处附近随时可以去走走；冬天海风大，适合短暂散步拍照。',tag:'海边散步',source:'https://www.visitbusan.net/',search:'해운대해수욕장'},
+      {id:'mipo',name:'海云台蓝线公园 · 美浦站',type:'sight',icon:'🚃',lat:35.158171,lon:129.172828,area:'海云台区',blurb:'1 月 6 日上午从这里坐海岸胶囊列车去青沙浦，沿海边看风景。胶囊列车时段常需提前预订。',tag:'1/6 · 胶囊列车起点',source:'https://www.bluelinepark.com/',search:'해운대블루라인파크 미포정거장'},
+      {id:'cheongsapo',name:'蓝线公园 · 青沙浦站',type:'sight',icon:'🌊',lat:35.161240,lon:129.191381,area:'海云台区',blurb:'胶囊列车终点，附近有灯塔和海边步道；可坐海边列车或出租车回海云台。',tag:'1/6 · 胶囊列车终点',source:'https://www.bluelinepark.com/',search:'청사포정거장'},
+      {id:'sealife',name:'SEA LIFE 釜山水族馆',type:'sight',icon:'🦈',lat:35.159188,lon:129.161022,area:'海云台海滩旁',blurb:'1 月 6 日下午，停留 2–3 小时：鲨鱼隧道、企鹅、海龟和互动展区。室内项目，适合冷天。',tag:'1/6 · 亲子室内',source:'https://www.visitsealife.com/busan/',search:'씨라이프 부산아쿠아리움'},
+      {id:'gwangalli',name:'广安里海滩 · 广安大桥夜景',type:'sight',icon:'🌉',lat:35.150888,lon:129.116781,area:'水营区',blurb:'1 月 6 日傍晚看广安大桥灯光；海滩边很多咖啡店和甜品店，可以顺便吃刨冰。',tag:'1/6 · 夜景',source:'https://www.visitbusan.net/',search:'광안리해수욕장'},
+      {id:'lotte',name:'釜山乐天世界 Adventure',type:'sight',icon:'🎠',lat:35.197285,lon:129.214286,area:'机张郡 · 东海线奥西利亚站',blurb:'1 月 7 日全天：皇家旋转木马、童话主题区、家庭过山车、角色表演和巡游。冬季营业时间、项目开放和身高限制待核实。',tag:'1/7 · 全天',source:'https://adventurebusan.lotteworld.com/',search:'롯데월드 어드벤처 부산'},
+      {id:'yonggungsa',name:'海东龙宫寺',type:'sight',icon:'⛩',lat:35.188434,lon:129.222976,area:'机张郡',blurb:'1 月 8 日早上 08:30–10:30 参观海边寺庙。离乐天世界很近，离釜山站较远，回程要留出取行李和去车站的时间。',tag:'1/8 · 早上',source:'https://www.visitbusan.net/',search:'해동용궁사'},
+      {id:'market',name:'海云台传统市场',type:'food',icon:'🍢',lat:35.162326,lon:129.163208,area:'海云台区 · 九南路旁',blurb:'1 月 6 日午餐：鱼饼（Eomuk）、糖饼（Hotteok）和韩式炸鸡，边走边吃。',tag:'1/6 · 午餐小吃',source:'https://www.visitbusan.net/',search:'해운대시장'},
+      {id:'haeridan',name:'海里团街（Haeridan-gil）',type:'food',icon:'🧁',lat:35.165366,lon:129.157623,area:'海云台站后面',blurb:'海云台站旁的小巷，咖啡店和小餐馆多；晚上或下雨天可以就近逛。',tag:'咖啡 · 近住处',source:'https://www.visitbusan.net/',search:'해리단길'},
+      {id:'gaemijip',name:'蚂蚁家 · 낙곱새 章鱼肠锅',type:'food',icon:'🍲',lat:35.1618,lon:129.1603,area:'海云台 · 九南路 34',blurb:'招牌낙곱새（章鱼＋牛肠＋虾锅），加乌冬面。偏辣，点「덜 맵게」，给孩子另备白饭；标注 24 小时营业（未核实）。南浦国际市场旁有本店。',tag:'1/6 晚餐 · 近住处',source:'https://polle.com/place/5CttTz/%EA%B0%9C%EB%AF%B8%EC%A7%91',search:'개미집 해운대'},
+      {id:'biff-hotteok',name:'BIFF 广场 · 坚果糖饼',type:'food',icon:'🥞',lat:35.0988,lon:129.029,area:'南浦洞 · 位置估算',blurb:'路边摊现煎坚果糖饼（씨앗호떡），挑排队最长那家。糖浆很烫，给孩子放凉再吃。',tag:'南浦 · 小吃',source:'https://www.trazy.com/spot/714/ssiat-hotteok',search:'비프광장 씨앗호떡'},
+      {id:'haeundae-hotteok',name:'海云台名品糖饼',type:'food',icon:'🥞',lat:35.1625,lon:129.163,area:'海云台市场旁 · 位置估算',blurb:'住处附近就能吃到的坚果糖饼，常排队约 30 分钟；营业时间未核实。',tag:'近住处 · 小吃',source:'https://polle.com/place/2N0fc5/%ED%95%B4%EC%9A%B4%EB%8C%80%20%EB%AA%85%ED%92%88%ED%98%B8%EB%96%A1',search:'해운대 명품호떡'},
+      {id:'bonjeon-gukbap',name:'本钱猪肉汤饭（釜山站）',type:'food',icon:'🍜',lat:35.1166,lon:129.0414,area:'釜山站步行 5 分钟',blurb:'清汤猪肉汤饭 ₩11,000、水煮肉套餐 ₩14,000。店小常排队，赶 KTX 要留足时间；孩子那碗不加辣酱（다대기）。营业时间未核实。',tag:'1/8 · KTX 前午餐',source:'https://polle.com/place/51fZHR/%EB%B3%B8%EC%A0%84%20%EB%8F%BC%EC%A7%80%EA%B5%AD%EB%B0%A5',search:'본전돼지국밥'},
+      {id:'miryang-gukbap',name:'密阳血肠猪肉汤饭（海云台）',type:'food',icon:'🍜',lat:35.1617,lon:129.16,area:'海云台站 3 号口 · 位置估算',blurb:'标注 24 小时营业，适合当早餐。汤不辣，孩子那碗别加辣酱。',tag:'近住处 · 早餐',source:'https://www.siksinhot.com/P/385336',search:'밀양순대돼지국밥 해운대'},
+      {id:'gamcheon',name:'甘川洞文化村',type:'sight',icon:'🎨',lat:35.0969,lon:129.0085,area:'沙下区',blurb:'彩色山坡村落，免费；冬季店铺约 17:00 关。坡陡台阶多，打车到坡顶再往下走；可买 ₩2,000 盖章地图给孩子玩。',tag:'南浦方向 · 下午',source:'https://www.ktriptips.com/kor/tourspot/1997221',search:'감천문화마을'},
+      {id:'jagalchi',name:'札嘎其市场 · 海鲜',type:'food',icon:'🦀',lat:35.0966,lon:129.0305,area:'南浦洞',blurb:'一楼挑活海鲜，二楼餐厅代加工。每月第 1、3 个周二可能休市——1 月 5 日正是第一个周二，去前先查。地面湿滑。',tag:'南浦 · 海鲜',source:'https://world.nol.com/en/content/pois/df86228b-1557-413c-8d35-d784a3e8abe6',search:'자갈치시장'},
+      {id:'bay101',name:'The Bay 101 · 夜景',type:'sight',icon:'🌃',lat:35.1566,lon:129.1521,area:'海云台 Marine City',blurb:'看对面 Marine City 高楼灯光；有炸鱼薯条和露台咖啡。1 月晚上海风大，穿暖。',tag:'1/6 · 夜景',source:'https://www.busannavi.net/eng/?p=38556',search:'더베이101'},
+      {id:'mipojip',name:'尾浦家 · 海鲜酱蟹',type:'food',icon:'🦀',lat:35.1597,lon:129.1715,area:'尾浦 · LCT 旁 · 位置估算',blurb:'招牌미녀해물장정식（酱蟹＋鲍鱼虾贝生腌拼盘，2 人起约 ₩35,000/人）。生腌不适合孩子，给她点章鱼或鲍鱼砂锅饭。平日 15:00–17:00 休息（2023 资料）。',tag:'1/6 · 午餐',source:'https://www.busannavi.net/eng/?p=38556',search:'미포집 해운대본점'},
+      {id:'mipo-kkeutjip',name:'尾浦末家 · 活章鱼/烤贝',type:'food',icon:'🐙',lat:35.158,lon:129.1728,area:'尾浦海边 · 位置估算',blurb:'海边烤贝店，套餐含活章鱼（산낙지），营业到深夜。没找到海云台专门的活章鱼名店，这家是最接近的猜测，评价一般。活章鱼吸盘易噎，孩子不要吃。',tag:'1/6 · 晚餐备选',source:'https://www.diningcode.com/profile.php?rid=I8ri8TDRBj1V',search:'해운대미포끝집'},
+      {id:'gijang-kkeutjip',name:'机张末家 · 鲍鱼粥',type:'food',icon:'🥣',lat:35.2347,lon:129.2434,area:'机张海岸 · 大边港北',blurb:'招牌오직전복죽 ₩19,000（2 份起），配海鲜小菜，清淡适合孩子。约 10:00 开门，离龙宫寺打车约 15 分钟；可用 CatchTable 线上排队。',tag:'1/8 · 早午餐',source:'https://polle.com/place/2zjQJ1/%EA%B8%B0%EC%9E%A5%20%EB%81%9D%EC%A7%91',search:'기장끝집'},
+      {id:'gijang-market',name:'机张市场 · 帝王蟹/雪蟹',type:'food',icon:'🦞',lat:35.2438,lon:129.216,area:'机张站附近',blurb:'市场二楼吃蒸蟹，아빠대게 会剪好方便孩子吃；帝王蟹按重量算价，先问每公斤价格。市场每月最后一个周二休（1/26，不受影响）。',tag:'1/7 · 乐天世界后晚餐',source:'https://world.nol.com/en/content/pois/df86228b-1557-413c-8d35-d784a3e8abe6',search:'기장시장 아빠대게'},
+      {id:'stay-new391',name:'海云台站 5 分钟独栋（新候选）',type:'stay',icon:'🏠',lat:35.166200,lon:129.159800,area:'海云台站 5 分钟 · 位置估算',blurb:'NZ$391（三晚，原价 $492），4.93 分 · 107 条评价，没有低分评价。2 间真卧室：一间 2 张 queen，一间 1 张 king。约 35 级楼梯、没电梯；热水要按锅炉按钮。',tag:'$391 · 最便宜',source:'https://www.airbnb.co.nz/rooms/1434394352816664679?check_in=2027-01-05&check_out=2027-01-08&adults=2&children=1',search:'해운대역'},
+      {id:'stay-wres',name:'W Residence Centum（Trip.com）',type:'stay',icon:'🏨',lat:35.171500,lon:129.131500,area:'Centum City 站一带 · 位置估算',blurb:'NZ$576（三晚），Trip.com 8.6 分 · 200 条评价。两卧 99㎡ 整套，酒店式有电梯，免费取消。旁边是新世界百货 Centum 和 Spa Land，地铁 2 号线到海云台 3 站。',tag:'$576 · 酒店式',source:'https://www.trip.com/hotels/list?city=253&checkin=2027-01-05&checkout=2027-01-08&adult=2&children=1&ages=8&crn=1&curr=NZD',search:'W레지던스호텔 센텀시티'},
+      {id:'stay-lct',name:'LCT Residence（Trip.com）',type:'stay',icon:'🏙',lat:35.160300,lon:129.169000,area:'海云台海滩东端 · LCT 大楼',blurb:'NZ$987（三晚），Trip.com 9.4 分 · 375 条评价。两卧 165㎡ 海景整套，免费取消；楼下就是海滩和蓝线公园美浦站。',tag:'$987 · 高档',source:'https://www.trip.com/hotels/list?city=253&checkin=2027-01-05&checkout=2027-01-08&adult=2&children=1&ages=8&crn=1&curr=NZD',search:'엘시티 레지던스'},
+      {id:'stay-el1',name:'Villa de EL 一楼（候选）',type:'stay',icon:'🏠',lat:35.163000,lon:129.159400,area:'海云台站 1 分钟 · 位置估算',blurb:'NZ$708（三晚），4.96 分 · 91 条评价。独栋房子一楼，2 间卧室，每间都有暖气，有儿童用品。燃油锅炉，热水要先设定（今年 1 月有人投诉）。订后 24 小时内免费取消。',tag:'$708 · 一楼',source:'https://www.airbnb.co.nz/rooms/1444670990722253055?check_in=2027-01-05&check_out=2027-01-08&adults=2&children=1',search:'해운대역'},
+      {id:'stay-el2',name:'Villa de EL 二楼（候选）',type:'stay',icon:'🏠',lat:35.162850,lon:129.159650,area:'海云台站 1 分钟 · 位置估算',blurb:'NZ$695（三晚），4.92 分 · 106 条评价。有两条 2 星：冬天热水不够、浴室很小没有淋浴间、有霉味、照片比实际新。需走楼梯。不推荐。',tag:'$695 · 有坑',source:'https://www.airbnb.co.nz/rooms/1450428155979442073?check_in=2027-01-05&check_out=2027-01-08&adults=2&children=1',search:'해운대역'},
+      {id:'stay-eden',name:'Eden（候选）',type:'stay',icon:'🏡',lat:35.165600,lon:129.157000,area:'海里团街 · 位置估算',blurb:'NZ$499（三晚），5.0 分 · 68 条评价。老房改造一楼，3 间卧室，浴室较矮小；12 月 22 日前免费取消。',tag:'$499 · 最省钱',source:'https://www.airbnb.co.nz/rooms/1640299361936942982?check_in=2027-01-05&check_out=2027-01-08&adults=2&children=1',search:'해리단길'},
+      {id:'stay-ocean',name:'Opening Special 海景公寓（候选）',type:'stay',icon:'🏢',lat:35.159900,lon:129.160200,area:'海滩 2 分钟 · 位置估算',blurb:'NZ$606（三晚），5.0 分但只有 10 条评价。高楼酒店式公寓，2 卧、海景、有洗衣烘干；16:00 入住，12 月 6 日前免费取消。',tag:'$606 · 评价少',source:'https://www.airbnb.co.nz/rooms/1760597225090535409?check_in=2027-01-05&check_out=2027-01-08&adults=2&children=1',search:'해운대해수욕장'}
+    ];
+    const all = [home,...spots];
+    const typeName = {home:'住宿基点',sight:'景点与体验',food:'吃东西',stay:'住宿候选',transport:'机场车站'};
+    const typeOrder = {transport:0,sight:1,food:2,stay:3};
+    const $ = id => document.getElementById(id);
+    let filter = 'all', query = '', selected = home, map, markers = new Map(), route;
+
+    function km(a,b) {
+      const r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
+      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+      return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    }
+    function distanceText(p) { const d=km(home,p); return d<1 ? `${Math.round(d*1000/50)*50} 米` : `${d.toFixed(1)} 公里`; }
+    function naver(p) { return `https://map.naver.com/p/search/${encodeURIComponent(p.search)}`; }
+    function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
+    function renderList() {
+      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || km(home,a)-km(home,b));
+      $('count').textContent=`${visible.length} 个地点 · 按类别及距离排列`;
+      $('places').replaceChildren();
+      if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
+      visible.forEach(p=>{
+        const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
+        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)} ↗</span>`;
+        b.addEventListener('click',()=>select(p,true)); $('places').append(b);
+      });
+    }
+    function renderDetail() {
+      const p=selected, isHome=p.id==='home';
+      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'距离基点':`距海云台站直线约 ${distanceText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${p.type==='stay'?'Airbnb 房源':'地点资料'} ↗</a></div>`;
+    }
+    function makeIcon(p, active=false) {
+      return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
+    }
+    function select(p, move) {
+      selected=p; renderList(); renderDetail();
+      if (!map) return;
+      markers.forEach((marker,id)=>marker.setIcon(makeIcon(all.find(x=>x.id===id),id===p.id)));
+      if (route) map.removeLayer(route);
+      if (p.id!=='home') route=L.polyline([[home.lat,home.lon],[p.lat,p.lon]],{color:'#e6a550',weight:3,dashArray:'6 7',opacity:.9}).addTo(map);
+      if (move) map.flyTo([p.lat,p.lon],p.id==='home'?15:Math.max(map.getZoom(),13),{duration:.7});
+    }
+    function updateMarkers() {
+      if (!map) return;
+      spots.forEach(p=>{ const m=markers.get(p.id); if (matching(p)) m.addTo(map); else map.removeLayer(m); });
+    }
+    function fitAll() {
+      if (!map) return;
+      const shown=[home,...spots.filter(matching)];
+      map.fitBounds(L.latLngBounds(shown.map(p=>[p.lat,p.lon])).pad(.08),{padding:[24,24],maxZoom:15});
+    }
+    $('search').addEventListener('input',e=>{ query=e.target.value.trim().toLowerCase();renderList();updateMarkers(); });
+    $('filters').addEventListener('click',e=>{
+      const b=e.target.closest('[data-filter]');if(!b)return;
+      filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));
+      renderList();updateMarkers();
+    });
+    $('nearby').addEventListener('click',()=>{if(map)map.flyTo([home.lat,home.lon],15,{duration:.7});});
+    $('airportbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='airport'),true));
+    $('stationbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='busanstn'),true));
+    $('overview').addEventListener('click',fitAll);
+    document.querySelector('.days').addEventListener('click',e=>{
+      const button=e.target.closest('.spot-link[data-spot]');
+      if (!button) return;
+      const spot=spots.find(p=>p.id===button.dataset.spot);
+      if (!spot) return;
+      select(spot,true);
+      if (window.matchMedia('(max-width:850px)').matches)
+        document.querySelector('.mapwrap').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    renderList();renderDetail();
+    if (window.L) {
+      map=L.map('map',{zoomControl:false,scrollWheelZoom:true}).setView([home.lat,home.lon],11);
+      // Standard OpenStreetMap tiles need a real page origin (Referer). Opened from a sandboxed
+      // preview or file://, they are refused, so fall back to OpenTopoMap after repeated errors.
+      const osm={url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
+      const topo={url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opts:{subdomains:'abc',maxZoom:17,attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
+      const noReferrer=self.origin==='null'||location.protocol==='file:';
+      let tiles, failures=0, usingTopo=false;
+      function useTiles(src){
+        if (tiles) map.removeLayer(tiles);
+        failures=0; tiles=L.tileLayer(src.url,src.opts).addTo(map);
+        tiles.on('tileerror',()=>{
+          if (++failures<3) return;
+          if (!usingTopo) { usingTopo=true; useTiles(topo); } else $('fallback').style.display='block';
+        });
+      }
+      usingTopo=noReferrer; useTiles(noReferrer?topo:osm);
+      L.control.zoom({position:'bottomright'}).addTo(map);
+      all.forEach(p=>{ const m=L.marker([p.lat,p.lon],{icon:makeIcon(p,p.id==='home')}).addTo(map); m.bindTooltip(p.name,{direction:'top',offset:[0,-14]}); m.on('click',()=>select(p,false)); markers.set(p.id,m); });
+      fitAll();
+    } else { $('fallback').style.display='block'; }
+  </script>
+</body>
+</html>
