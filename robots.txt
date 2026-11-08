@@ -1,0 +1,14 @@
+# The project Pages URL is under /travel-planner/. This file is retained for
+# a future root domain, but crawlers only consult robots.txt at the host root.
+User-agent: GPTBot
+Disallow: /
+
+User-agent: OAI-SearchBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+# Let search crawlers read each page's noindex directive.
+User-agent: *
+Allow: /

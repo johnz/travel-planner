@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta name="robots" content="noindex, nofollow, noarchive, nosnippet">
+  <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>哈尔滨六晚 · 住处出发互动地图</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { --bg:#f5f8f6; --panel:#fff; --panel2:#e9f3f2; --line:#d9e5e3; --text:#173843; --muted:#607b83; --gold:#d98232; --blue:#2a91b8; --pink:#d77975; --green:#5da47e; }
+    * { box-sizing:border-box; }
+    html,body { margin:0; min-height:100%; background:var(--bg); color:var(--text); font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+    button,input,a { font:inherit; }
+    button { cursor:pointer; }
+    a { color:inherit; }
+    .app { display:grid; grid-template-columns:minmax(350px,410px) minmax(0,1fr); min-height:850px; }
+    .sidebar { display:flex; flex-direction:column; min-height:850px; max-height:850px; overflow-y:auto; border-right:1px solid var(--line); background:linear-gradient(160deg,#fff,#f3f8f7 72%); z-index:2; }
+    .intro { padding:26px 25px 18px; border-bottom:1px solid var(--line); }
+    .eyebrow { display:flex; align-items:center; gap:8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
+    .eyebrow:before { content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold); }
+    h1 { margin:13px 0 7px; font-size:29px; line-height:1.24; letter-spacing:-.04em; }
+    .sub { margin:0; font-size:13px; line-height:1.7; color:var(--muted); }
+    .tripline { display:flex; flex-wrap:wrap; gap:7px; margin-top:16px; }
+    .tripline span { padding:7px 10px; border:1px solid #d2e2e1; border-radius:100px; background:#edf5f4; font-size:11px; font-weight:700; }
+    .home { display:flex; align-items:center; gap:12px; margin-top:17px; padding:13px; border:1px solid #ebc495; border-radius:15px; background:#fff7ed; text-decoration:none; }
+    .homeicon { display:grid; place-items:center; flex:none; width:37px; height:37px; border-radius:12px; background:var(--gold); color:#fff; font-size:19px; }
+    .home strong { display:block; font-size:13px; }
+    .home small { display:block; margin-top:3px; font-size:11px; color:var(--muted); }
+    .home-arrow { margin-left:auto; color:var(--gold); font-size:20px; }
+    .controls { padding:15px 25px 13px; border-bottom:1px solid var(--line); }
+    .search { display:flex; align-items:center; gap:9px; padding:0 12px; height:39px; border:1px solid #cbdcda; border-radius:10px; background:#fff; color:var(--muted); }
+    .search input { width:100%; border:0; outline:0; background:transparent; color:var(--text); font-size:13px; }
+    .search input::placeholder { color:#79919a; }
+    .filters { display:flex; gap:6px; overflow-x:auto; margin-top:11px; padding-bottom:3px; scrollbar-width:none; }
+    .filters::-webkit-scrollbar { display:none; }
+    .filter { flex:none; padding:7px 10px; border:1px solid #cbdcda; border-radius:100px; background:#fff; color:var(--muted); font-size:11px; font-weight:700; }
+    .filter.active { border-color:#176b7b; background:#176b7b; color:#fff; }
+    .watchlist { margin:10px 17px 0; border:1px solid #cbdcda; border-radius:12px; background:#fff; font-size:11px; }
+    .watchlist summary { display:flex; align-items:center; justify-content:space-between; padding:11px 13px; color:#173843; font-weight:800; cursor:pointer; list-style:none; }
+    .watchlist summary::-webkit-details-marker { display:none; }
+    .watchlist summary span { color:#607b83; font-weight:600; }
+    .watchlist[open] summary { border-bottom:1px solid var(--line); }
+    .watchlist-body { max-height:230px; overflow-y:auto; padding:2px 13px 10px; color:#4c6972; line-height:1.55; }
+    .watchlist-body p { margin:9px 0 6px; }
+    .watchlist-body ul { margin:0; padding-left:18px; }
+    .watchlist-body li { margin:7px 0; }
+    .watchlist-body a { color:#176b7b; font-weight:700; }
+    .itinerary { margin:10px 17px 0; border:1px solid #b7d7d3; border-radius:12px; background:#f5fbf9; font-size:11px; }
+    .itinerary summary { display:flex; align-items:center; justify-content:space-between; padding:11px 13px; font-weight:800; cursor:pointer; list-style:none; }
+    .itinerary summary::-webkit-details-marker { display:none; }
+    .itinerary summary span { color:var(--muted); font-weight:600; }
+    .itinerary[open] summary { border-bottom:1px solid var(--line); }
+    .days { max-height:320px; overflow-y:auto; padding:7px 12px 9px; -webkit-overflow-scrolling:touch; }
+    .day { padding:8px 2px; border-bottom:1px solid var(--line); line-height:1.5; }
+    .day:last-child { border-bottom:0; }
+    .day strong { display:block; margin-bottom:2px; font-size:11px; }
+    .day p { margin:2px 0; color:#4c6972; }
+    .day em { color:#9b622c; font-style:normal; font-weight:700; }
+    .extras { display:flex; flex-wrap:wrap; align-items:center; gap:5px; margin-top:7px; }
+    .extras-label { color:#55747c; font-size:10px; font-weight:800; }
+    .spot-link { padding:4px 7px; border:1px solid #bfd8d6; border-radius:7px; background:#fff; color:#176b7b; font-size:10px; font-weight:700; }
+    .spot-link:hover,.spot-link:focus-visible { background:#e1f2ef; outline:2px solid #8ac6c0; outline-offset:1px; }
+    .extra-note { margin-top:4px!important; font-size:10px; }
+    .listbar { display:flex; justify-content:space-between; padding:13px 25px 7px; font-size:11px; color:var(--muted); }
+    .listbar strong { color:var(--text); font-size:12px; }
+    .places { flex:none; padding:4px 17px 22px; scrollbar-color:#bad0cf transparent; }
+    .place { display:grid; grid-template-columns:32px 1fr auto; align-items:center; gap:11px; width:100%; margin:6px 0; padding:12px 11px; border:1px solid transparent; border-radius:13px; background:transparent; color:var(--text); text-align:left; }
+    .place:hover,.place:focus-visible { background:#eaf4f3; outline:none; }
+    .place.selected { border-color:#8bbdbe; background:#e3f1ef; }
+    .placeicon { display:grid; place-items:center; width:32px; height:32px; border-radius:10px; background:#e8f1f1; font-size:16px; }
+    .place[data-type="sight"] .placeicon { background:rgba(117,204,232,.15); }
+    .place[data-type="food"] .placeicon { background:rgba(242,154,152,.15); }
+    .place[data-type="mall"] .placeicon { background:rgba(158,213,173,.15); }
+    .place[data-type="transport"] .placeicon { background:rgba(177,160,217,.2); }
+    .place strong { display:block; font-size:13px; line-height:1.35; }
+    .place small { display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.4; }
+    .distance { color:#53707a; font-size:10px; white-space:nowrap; }
+    .empty { padding:22px 12px; color:var(--muted); font-size:13px; line-height:1.6; }
+    .mapwrap { position:relative; min-height:850px; background:#eef3f1; }
+    #map { position:absolute; inset:0; z-index:0; }
+    .map-fallback { display:none; position:absolute; top:20px; left:20px; right:20px; z-index:1; padding:14px; border:1px solid #d9e5e3; border-radius:10px; background:#fff; color:#173843; box-shadow:0 10px 35px #0002; font-size:13px; }
+    .maptools { position:absolute; top:18px; right:18px; z-index:500; display:flex; flex-direction:column; gap:8px; }
+    .maptools button { padding:10px 13px; border:1px solid #c9d9db; border-radius:10px; background:#fff; color:#183040; font-size:12px; font-weight:800; box-shadow:0 5px 20px #061b2b2c; }
+    .maptools button:hover { background:#eaf3f4; }
+    .detail { position:absolute; right:18px; bottom:25px; left:18px; z-index:500; max-width:430px; padding:18px 20px 17px; border:1px solid #c9dbdc; border-radius:17px; background:rgba(255,255,255,.97); color:#193040; box-shadow:0 16px 55px #061b2b40; backdrop-filter:blur(12px); }
+    .detail-kind { color:#507183; font-size:11px; font-weight:800; letter-spacing:.1em; }
+    .detail h2 { margin:6px 0 7px; font-size:20px; line-height:1.3; }
+    .detail p { margin:0; color:#496371; font-size:12px; line-height:1.7; }
+    .detail-meta { display:flex; flex-wrap:wrap; gap:6px; margin:12px 0 13px; }
+    .detail-meta span { padding:5px 8px; border-radius:7px; background:#e8f0f1; color:#34596c; font-size:10px; font-weight:800; }
+    .detail-actions { display:flex; flex-wrap:wrap; gap:8px; }
+    .detail-actions a { padding:9px 12px; border-radius:9px; background:#143b4f; color:#fff; text-decoration:none; font-size:11px; font-weight:800; }
+    .detail-actions a.secondary { background:#e8f0f1; color:#245267; }
+    .note { position:absolute; top:18px; left:18px; z-index:500; max-width:310px; padding:10px 12px; border:1px solid #d5e2e2; border-radius:10px; background:rgba(255,255,255,.95); color:#385965; font-size:11px; line-height:1.5; box-shadow:0 5px 20px #061b2b18; }
+    .leaflet-tile-pane { filter:saturate(.8) contrast(.82) brightness(1.08); }
+    .pin { width:32px; height:32px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#22465a; font-size:16px; box-shadow:0 3px 12px #17384c88; transition:transform .15s; }
+    .pin.sight { background:#4e9fc0; } .pin.food { background:#d77975; } .pin.mall { background:#6aaf83; } .pin.transport { background:#8e74b8; } .pin.homepin { background:#e9a850; }
+    .pin.selected { transform:scale(1.26); box-shadow:0 0 0 5px #fff8,0 5px 16px #17384c88; }
+    .leaflet-div-icon { border:0; background:transparent; }
+    .leaflet-control-attribution { font-size:9px!important; }
+    @media(max-width:850px) {
+      .app { display:flex; flex-direction:column; }
+      .sidebar { max-height:none; min-height:0; overflow:visible; border-right:0; }
+      .intro { padding:19px 18px 15px; }
+      h1 { font-size:24px; }
+      .controls { padding:13px 18px 11px; }
+      .listbar { padding:11px 18px 6px; }
+      .places { max-height:248px; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; padding:3px 11px 15px; }
+      .mapwrap { min-height:530px; }
+      #map { min-height:530px; }
+      .note { top:12px; left:12px; max-width:210px; }
+      .maptools { top:12px; right:12px; }
+      .detail { right:12px; bottom:20px; left:12px; max-width:none; padding:14px 16px; }
+    }
+    @media(max-width:470px) { .detail h2 { font-size:17px; } .detail p { font-size:11px; } .maptools button { padding:8px; font-size:11px; } }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar" aria-label="地点清单">
+      <header class="intro">
+        <div class="eyebrow">Harbin · winter 2027</div>
+        <h1>住在住处，慢慢逛哈尔滨</h1>
+        <p class="sub">以「老道外住处」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。</p>
+        <div class="tripline"><span>1月10日—16日 · 6晚</span><span>家庭出行</span></div>
+        <div class="tripline"><span>✈ 1月10日 13:35 抵达 HRB T2</span><span>✈ 1月16日 18:05 离开 HRB</span></div>
+        <a class="home" href="https://www.openstreetmap.org/search?query=Daowai%20Harbin" target="_blank" rel="noopener noreferrer">
+          <span class="homeicon">⌂</span><span><strong>老道外住处</strong><small>老道外街区 · 住处位置仅作区域参考</small></span><span class="home-arrow">↗</span>
+        </a>
+      </header>
+      <details class="itinerary" open>
+        <summary>🗓 六晚轻松行程草案 <span>每日主线＋备选 · 内部可滚动 ▾</span></summary>
+        <div class="days">
+          <div class="day"><strong>1/10 周日 · 抵达</strong><p>13:35 到太平机场 T2；办理入境、取行李后去住处，下午休息。</p><p>晚餐：民宿附近简单吃，早点睡。</p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="baroque">中华巴洛克街区短逛</button></div><p class="extra-note">到民宿后再决定，冷了就直接回房。</p></div>
+          <div class="day"><strong>1/11 周一 · 江上玩雪</strong><p>睡晚一点，午餐老昌春饼；下午从开放入口进入松花江冰雪嘉年华，玩约 2 小时。</p><p>晚餐：山河屯铁锅炖。</p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="flood">防洪纪念塔</button><button class="spot-link" type="button" data-spot="railbridge">中东铁路桥</button></div><p class="extra-note">都在江边方向；选一个顺路看即可。</p></div>
+          <div class="day"><strong>1/12 周二 · 菜市场与老街</strong><p>上午道里菜市场和索菲亚广场，下午中央大街，穿插室内休息。</p><p>晚餐：俄式西餐，优先找有当晚表演的店。</p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="madierice">马迭尔冰棍</button><button class="spot-link" type="button" data-spot="zhaolin">兆麟公园冰灯</button></div><p class="extra-note">冰灯留到晚餐后，具体开放以当季公告为准。</p></div>
+          <div class="day"><strong>1/13 周三 · 东北虎与芭蕾预留</strong><p>上午至中午东北虎林园；下午回民宿休息。</p><p>晚餐：剧院前简单吃；<em>晚间暂留《天鹅湖》档，具体日期未公布，可能要调换。</em></p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="polar">极地公园</button><button class="spot-link" type="button" data-spot="sun">太阳岛雪雕</button></div><p class="extra-note">只有当晚没有芭蕾且体力足够时，二选一。</p></div>
+          <div class="day"><strong>1/14 周四 · 冰雪大世界</strong><p>上午休息，下午到夜间看冰雕灯光；演出与游乐项目按当日开放情况选择。</p><p>晚餐：景区内或返城后简单吃。</p><div class="extras"><span class="extras-label">园内有精神再选</span><button class="spot-link" type="button" data-spot="ice">哈冰秀</button><button class="spot-link" type="button" data-spot="ice">雪花摩天轮</button></div><p class="extra-note">按当季预约、排队和女儿身高规则选择，不必两项都玩。</p></div>
+          <div class="day"><strong>1/15 周五 · 一家三人泡温泉</strong><p>睡晚一点，下午枫叶小镇亲子温泉；<em>三人同池和冬季开放须先确认。</em></p><p>晚餐：温泉附近或回城后随意吃。</p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="mapleoutlet">枫叶小镇奥特莱斯</button><button class="spot-link" type="button" data-spot="baroque">回城后老街夜景</button></div><p class="extra-note">奥特莱斯紧邻温泉，老街夜景看返城时间。</p></div>
+          <div class="day"><strong>1/16 周六 · 返程</strong><p>睡晚一点，午餐、退房；约 13:30 从市区出发，预留冬季车程和办理手续时间。</p><p>18:05 上海航空 返程航班 从哈尔滨飞上海；出发前核对实际航站楼。</p><div class="extras"><span class="extras-label">有精神再选</span><button class="spot-link" type="button" data-spot="baroque">民宿附近补逛老街</button><button class="spot-link" type="button" data-spot="laodingfeng">老鼎丰买糕点</button></div><p class="extra-note">只选机场出发时间前能结束的项目。</p></div>
+        </div>
+      </details>
+      <section class="controls" aria-label="筛选地点">
+        <label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜索机场、景点、餐饮" autocomplete="off" aria-label="搜索地点"></label>
+        <div class="filters" id="filters">
+          <button class="filter active" data-filter="all" type="button">全部</button>
+          <button class="filter" data-filter="sight" type="button">景点</button>
+          <button class="filter" data-filter="food" type="button">吃东西</button>
+          <button class="filter" data-filter="mall" type="button">商场</button>
+          <button class="filter" data-filter="transport" type="button">机场</button>
+        </div>
+      </section>
+      <details class="watchlist">
+        <summary>🎭 待查演出与餐秀 <span>1月10—16日 · 9项 ▾</span></summary>
+        <div class="watchlist-body">
+          <p>截至2026年11月8日，本冰雪季已有演出计划；以下项目的旅行日期场次仍待确认。优先查 1月10—15日，1月16日视返程时间决定。</p>
+          <ul>
+            <li><strong>红门御宴 · 宫廷餐秀</strong>：中华巴洛克街区内，作为俄餐晚餐的可换选项；有宴席、歌舞、互动游戏。官网展示的是往年场次，且往年周一休演，须查 2027 年 1 月是否营业、孩子票和妆造费用。<a href="https://www.redhotmedia.com.cn/ticket/ticket_bookdetail_201.html" target="_blank" rel="noopener noreferrer">项目介绍 ↗</a></li>
+            <li><strong>拾禧宴 · 金朝主题餐秀</strong>：以黑龙江金源文化和东北民俗为主题，晚宴配约 90 分钟表演；位于南岗区，作为红门御宴的备选。查 2027 年 1 月场次、儿童票与内容。<a href="https://www.klook.com/zh-CN/activity/158432-harbin-shixi-ban-imperial-feast-for-kings/" target="_blank" rel="noopener noreferrer">产品介绍 ↗</a></li>
+            <li><strong>刘老根大舞台 · 东北二人转</strong>：哈尔滨南岗剧场；查旅行日期节目内容和 儿童适宜程度，通常偏东北方言喜剧。<a href="https://heb.llgdwt.cn/" target="_blank" rel="noopener noreferrer">剧场官网 ↗</a></li>
+            <li><strong>黑龙江德云社 · 相声</strong>：老道外长春街百花剧场；官网旧页写身高 1.2 米以下儿童谢绝入场，需查 2027 年场次及现行儿童规则。<a href="https://www.guodegang.org/theater/theater.php?id=2" target="_blank" rel="noopener noreferrer">剧场资料 ↗</a></li>
+            <li><strong>米德维奇 · 俄餐配歌舞</strong>：曾有俄罗斯舞蹈及手风琴、小提琴等表演；1 月 12 日俄式晚餐优先询问此店，订位前问当天是否演出及具体门店。<a href="https://finance.sina.com.cn/jjxw/2025-05-05/doc-inevneki6047608.shtml" target="_blank" rel="noopener noreferrer">哈尔滨日报报道 ↗</a></li>
+            <li><strong>芭蕾《天鹅湖》</strong>：1 月 13 日晚间先留空；本季已预告哈尔滨大剧院会演出，但 1 月 10—15 日是否有场次尚未确认。查实际日期、儿童规则、外国护照购票和三人票价；确定后调整当日活动。<a href="https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml" target="_blank" rel="noopener noreferrer">冰雪季预告 ↗</a></li>
+            <li><strong>哈冰秀</strong>：查冰雪大世界当季场次、预约方式及是否包含在门票内；若 1 月 14 日场次合适，可与冰雪大世界同日安排。<a href="https://beer.hrbicesnow.com/show" target="_blank" rel="noopener noreferrer">景区演出页 ↗</a></li>
+            <li><strong>中华巴洛克沉浸式演出</strong>：查“尔滨威虎厅”等项目的具体节目、时长和亲子适宜程度。<a href="https://www.hlj.gov.cn/hlj/c107858/202611/c00_31990280.shtml" target="_blank" rel="noopener noreferrer">冰雪季预告 ↗</a></li>
+            <li><strong>中央大街音乐与快闪</strong>：查马迭尔阳台或街头演出日期，可顺路观看。<a href="https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml" target="_blank" rel="noopener noreferrer">冰雪季预告 ↗</a></li>
+          </ul>
+          <p>复查时也核对演出地点、时间、是否需要实名购票以及外国护照购票方式。</p>
+        </div>
+      </details>
+      <details class="watchlist">
+        <summary>♨ 三人同泡 · 待确认 <span>暂定 1月15日下午 ▾</span></summary>
+        <div class="watchlist-body">
+          <p><strong>首选枫叶小镇温泉度假区</strong>：有室内温泉泡池及儿童水区，适合一家三人一起泡。2027 年 1 月具体开放池、三人同池规则、泳衣要求及儿童票价仍需店方确认。位于松北区，建议留出半天。</p>
+          <p>备选<strong>银河欢乐世界「水乐园票」</strong>，有家庭戏水区，偏向玩水；须确认冬季开放。传统洗浴中心的男女浴区不能当作三人同池方案。</p>
+          <p>带三人的泳衣和有效护照；预约前量女儿身高，向枫叶小镇确认室内亲子池、换衣淋浴安排及三人总价。<a href="https://you.ctrip.com/sight/harbin151/5079350.html" target="_blank" rel="noopener noreferrer">枫叶小镇资料 ↗</a></p>
+        </div>
+      </details>
+      <div class="listbar"><strong>地点清单</strong><span id="count"></span></div>
+      <div class="places" id="places" aria-live="polite"></div>
+    </aside>
+    <section class="mapwrap" aria-label="哈尔滨互动地图">
+      <div id="map"></div>
+      <div class="map-fallback" id="fallback">底图暂时无法加载。地点清单仍可使用，点击地点后可打开高德地图。</div>
+      <div class="note">虚线和数字是<strong>直线距离</strong>，不是步行或车程；1 月出行请按天气选择交通。</div>
+      <div class="maptools"><button id="nearby" type="button">看住处周围</button><button id="airportbtn" type="button">✈ 看机场</button><button id="overview" type="button">看全部地点</button></div>
+      <article class="detail" id="detail" aria-live="polite"></article>
+    </section>
+  </main>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Coordinates are WGS84 for OpenStreetMap. The homestay pin marks its residential complex,
+    // not the exact entrance to the booked apartment. Other pins mark POIs or district centers.
+    const home = { id:'home', name:'老道外住处', type:'home', icon:'⌂', lat:45.779850, lon:126.634759,
+      area:'老道外 · 道外区', blurb:'住宿标记只表示老道外街区，并非具体地址。',
+      source:'https://www.openstreetmap.org/search?query=Daowai%20Harbin', search:'中华巴洛克历史文化街区 哈尔滨' };
+    const spots = [
+      {id:'airport',name:'哈尔滨太平国际机场 · T2',type:'transport',icon:'✈',lat:45.621344,lon:126.240029,area:'道里区太平镇 · HRB',blurb:'1 月 10 日韩亚航空 抵达航班 从首尔仁川出发，哈尔滨当地时间 13:35 抵达 T2。1 月 16 日上海航空 返程航班 于 18:05 从哈尔滨飞上海；约 13:30 从市区出发，出发前核对返程航站楼。图钉为 T2 航站楼附近。',tag:'1/10 抵达 · 1/16 返程',source:'https://ditu.amap.com/place/B0FFJ3IFW7',search:'哈尔滨太平国际机场 T2航站楼'},
+      {id:'baroque',name:'中华巴洛克历史文化街区',type:'sight',icon:'🏛',lat:45.779850,lon:126.634759,area:'老道外',blurb:'中西合璧的老街建筑，适合边走边吃。图钉落在街区中心附近；从住处出发可先逛这里。',tag:'老街 · 近住处',source:'https://ditu.amap.com/place/B0FFFX17PB',search:'中华巴洛克历史文化街区 哈尔滨'},
+      {id:'central',name:'中央大街',type:'sight',icon:'✦',lat:45.772689,lon:126.612784,area:'道里区',blurb:'欧式建筑、商店和餐馆集中的步行街。街道很长，图钉标在中段，实际距离取决于目的地。',tag:'步行街',source:'https://www.openstreetmap.org/search?query=Central%20Street%20Daoli%20Harbin',search:'哈尔滨中央大街'},
+      {id:'sophia',name:'圣索菲亚教堂',type:'sight',icon:'⛪',lat:45.768195,lon:126.621277,area:'索菲亚广场',blurb:'哈尔滨代表性的红砖教堂，适合与道里菜市场安排在同一段行程。',tag:'建筑 · 夜景',source:'https://www.openstreetmap.org/way/338425563',search:'哈尔滨圣索菲亚教堂'},
+      {id:'flood',name:'防洪纪念塔 · 松花江畔',type:'sight',icon:'🌊',lat:45.778741,lon:126.611276,area:'中央大街北端',blurb:'中央大街北端的江边地标，可顺路看松花江与冬季江畔景色。',tag:'江边',source:'https://ditu.amap.com/place/B01C30I9EP',search:'哈尔滨防洪纪念塔'},
+      {id:'rivercarnival',name:'松花江冰雪嘉年华',type:'sight',icon:'🛷',lat:45.780500,lon:126.611300,area:'防洪纪念塔后方江面',blurb:'本冰雪季预告在江面设置亲子冰雪项目。只从开放的景区入口进入、在划定区域活动；不要自行从岸边踏上天然冰面或横穿江面。图钉标在往年入口附近，2027 年实际入口和项目以当季公告为准。',tag:'亲子 · 江上冰雪',source:'https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml',search:'哈尔滨松花江冰雪嘉年华 防洪纪念塔'},
+      {id:'railbridge',name:'中东铁路桥 · 老江桥',type:'sight',icon:'🌉',lat:45.786600,lon:126.617600,area:'松花江上',blurb:'由老铁路桥改造的江上步行桥，适合与江边行程一起看。图钉标在桥体中段；实际进入请按导航寻找开放的桥头入口。',tag:'老桥 · 江景',source:'https://wlt.hlj.gov.cn/wlt/c114254/202503/c00_31824273.shtml',search:'哈尔滨中东铁路桥 老江桥 南入口'},
+      {id:'zhaolin',name:'兆麟公园 · 冰灯游园会',type:'sight',icon:'🌲',lat:45.775378,lon:126.617315,area:'道里区',blurb:'本冰雪季预告举办冰灯游园会，适合作为市中心较短的夜间看灯活动；2027 年实际开放时间和门票以景区公告为准。',tag:'冰灯 · 市中心',source:'https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml',search:'哈尔滨兆麟公园 冰灯游园会'},
+      {id:'ice',name:'哈尔滨冰雪大世界',type:'sight',icon:'❄',lat:45.775338,lon:126.556423,area:'松北区',blurb:'1 月 14 日下午至夜间安排。今冬预告有《冰雪奇缘》主题冰雕区；可选看哈冰秀。上午留给休息，晚餐在景区内或返城后简单吃。开放时间、门票和演出以当季公告为准。',tag:'1/14 · 冰雕夜景',source:'https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml',search:'哈尔滨冰雪大世界'},
+      {id:'tiger',name:'东北虎林园',type:'sight',icon:'🐯',lat:45.814961,lon:126.596783,area:'松北区',blurb:'1 月 13 日上午至中午安排，下午返回民宿休息。提前核对 2027 年入园和观虎车项目；若当天晚上有芭蕾，晚餐安排简单些。',tag:'1/13 · 亲子观虎',source:'https://ditu.amap.com/place/B01C30J5FG',search:'哈尔滨东北虎林园 松北街88号'},
+      {id:'theatre',name:'哈尔滨大剧院 ·《天鹅湖》待查',type:'sight',icon:'🩰',lat:45.809312,lon:126.585574,area:'松北区大剧院街1号',blurb:'本冰雪季预告有《天鹅湖》演出；1 月 13 日晚间先预留，但 1 月 10—15 日的具体场次尚未公布。待官宣后按真实日期调换日程，不能把预留当成已有票。',tag:'1/13 晚暂留 · 场次未确认',source:'https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml',search:'哈尔滨大剧院 天鹅湖 芭蕾'},
+      {id:'hotspring',name:'枫叶小镇温泉度假区 · 亲子泡汤待确认',type:'sight',icon:'♨',lat:45.825901,lon:126.467971,area:'松北区智谷三街5555号',blurb:'1 月 15 日下午安排一家三人泡温泉。预订前必须确认爸爸、妈妈和 女儿可同池、室内亲子池冬季开放、泳衣规则和儿童票。若不符，改查银河欢乐世界水乐园票。',tag:'1/15 · 三人同泡待确认',source:'https://you.ctrip.com/sight/harbin151/5079350.html',search:'枫叶小镇温泉度假区 哈尔滨'},
+      {id:'mapleoutlet',name:'枫叶小镇奥特莱斯',type:'mall',icon:'🛍',lat:45.822124,lon:126.463026,area:'松北区智谷三街 · 温泉附近',blurb:'1 月 15 日泡温泉后若还有精神，可顺路逛一会儿。实际商户及营业时间出发前再核对。',tag:'1/15 · 温泉旁备选',source:'https://ditu.amap.com/place/B0FFF3AW1A',search:'枫叶小镇奥特莱斯 哈尔滨'},
+      {id:'sun',name:'太阳岛风景区',type:'sight',icon:'☀',lat:45.789682,lon:126.591963,area:'松北区',blurb:'江北大景区；冬季雪雕等展览按当年安排开放，可和极地公园规划在同一天。',tag:'景区 · 远途',source:'https://ditu.amap.com/place/B01C30003A',search:'哈尔滨太阳岛风景区'},
+      {id:'polar',name:'哈尔滨极地公园',type:'sight',icon:'🐧',lat:45.782818,lon:126.580491,area:'松北区',blurb:'室内亲子项目。本冰雪季预告有淘学企鹅冰雪巡游和冬季光影秀；具体场馆、表演时间和门票请临行前核对。',tag:'亲子 · 室内',source:'https://www.hlj.gov.cn/hlj/c107858/202611/c00_31991950.shtml',search:'哈尔滨极地公园'},
+      {id:'hayao',name:'哈药六版画博物馆',type:'sight',icon:'🖼',lat:45.762444,lon:126.699416,area:'道外区南直路326号',blurb:'特色建筑和室内版画展，适合天冷时安排半天。现行常规安排为周二至周日开放、周一闭馆；2027 年请再核对预约及开放信息。',tag:'建筑 · 室内',source:'https://wlt.hlj.gov.cn/wlt/c114262/202603/c00_31921663.shtml',search:'哈药六版画博物馆 南直路326号'},
+      {id:'volga',name:'伏尔加庄园',type:'sight',icon:'🏰',lat:45.669234,lon:126.893562,area:'香坊区成高子镇 · 城郊',blurb:'俄式建筑和冬季雪景适合拍照，往季也有亲子雪上项目。距离市中心较远，建议留出大半天；项目、门票和接驳以当季公告为准。',tag:'雪景 · 城郊远途',source:'https://wlt.hlj.gov.cn/wlt/c114254/202412/c00_31796109.shtml',search:'哈尔滨伏尔加庄园'},
+      {id:'songsong',name:'松松小镇 · 乐松广场',type:'mall',icon:'🎠',lat:45.717757,lon:126.642246,area:'香坊区三大动力路8号 · 乐松广场3层',blurb:'室内亲子活动、餐饮和购物集中，可作严寒天气的备选。图钉标在乐松广场内，具体项目和营业情况请出发前核对。',tag:'亲子 · 室内',source:'https://www.amap.com/place/B0FFFTSFOM',search:'松松小镇 乐松广场 哈尔滨'},
+      {id:'market',name:'道里菜市场',type:'food',icon:'🥟',lat:45.767796,lon:126.619814,area:'索菲亚教堂附近',blurb:'1 月 12 日上午安排，与索菲亚广场同走。吃红肠、大列巴和小吃，按胃口买，不急着安排正式午餐。这里按你说的“道口菜市场”理解为道里菜市场。',tag:'1/12 · 市场小吃',source:'https://www.amap.com/place/B01C3004B5',search:'道里菜市场 新一百店 哈尔滨'},
+      {id:'hongjiang',name:'红江包子铺（巴洛克店）',type:'food',icon:'🥟',lat:45.781219,lon:126.634452,area:'南二道街103号',blurb:'1 月 11 日老道外早餐：包子配热饮，随后逛中华巴洛克街区。营业时间和排队情况请当天查看。',tag:'1/11 · 早餐',source:'https://www.amap.com/place/B0FFHTR5MD',search:'红江包子铺 巴洛克店 哈尔滨'},
+      {id:'laodingfeng',name:'老鼎丰（靖宇街总店）',type:'food',icon:'🍰',lat:45.781741,lon:126.634663,area:'靖宇街392号',blurb:'1 月 11 日逛老道外时买糕点，可带回民宿做下午茶。',tag:'1/11 · 糕点',source:'https://www.amap.com/place/B01C305AFG',search:'老鼎丰 靖宇街总店 哈尔滨'},
+      {id:'laochujia',name:'老厨家（中央大街店）',type:'food',icon:'🍖',lat:45.771685,lon:126.613604,area:'西七道街55号 · 巴拉斯美食城3楼',blurb:'1 月 12 日午餐重点吃锅包肉，可再配一道东北家常菜。三人先少点几道，遇排队可调整用餐时间。',tag:'1/12 · 锅包肉',source:'https://ditu.amap.com/place/B0FFH7CLF8',search:'老厨家 中央大街店 西七道街55号 哈尔滨'},
+      {id:'madierice',name:'马迭尔冷饮厅（中央大街店）',type:'food',icon:'🍦',lat:45.771368,lon:126.613391,area:'中央大街89号',blurb:'1 月 12 日逛中央大街时尝马迭尔冰棍。室外很冷，可三人分享一根，随后进室内暖和。',tag:'1/12 · 冰棍',source:'https://www.amap.com/place/B0FFFVJQHH',search:'马迭尔冷饮厅 中央大街89号 哈尔滨'},
+      {id:'shanhetun',name:'山河屯铁锅炖（中央大街店）',type:'food',icon:'🍲',lat:45.776360,lon:126.613004,area:'中央大街199号5层 · 江边附近',blurb:'1 月 11 日玩完松花江冰雪嘉年华后，晚餐吃热乎的铁锅炖。炖菜准备需时间，三人先确认份量并提前订位。',tag:'1/11 · 铁锅炖晚餐',source:'https://www.amap.com/place/B0KRMY2SKL',search:'山河屯铁锅炖 中央大街店 哈尔滨'},
+      {id:'springpancake',name:'老昌春饼（中央大街店）',type:'food',icon:'🥞',lat:45.776061,lon:126.618222,area:'中央大街180号',blurb:'1 月 11 日午餐吃春饼、筋饼，配炒鸡蛋、土豆丝或肉丝。下午再去江上玩雪，午餐不要点得太多。分店营业和排队以当天为准。',tag:'1/11 · 春饼午餐',source:'https://ditu.amap.com/place/B01C305ADI',search:'老昌春饼 中央大街180号 哈尔滨'},
+      {id:'russiandine',name:'米德维奇俄式西餐厅（演出待确认）',type:'food',icon:'🎻',lat:45.774351,lon:126.620695,area:'道里区西六道街27号',blurb:'1 月 12 日俄式晚餐候选；曾有俄罗斯舞蹈和手风琴等表演。订位前确认当前门店地址及当晚是否演出。也可改选马迭尔、华梅等俄餐。',tag:'1/12 · 俄餐晚餐',source:'https://www.amap.com/place/B0HK6U75PJ',search:'米德维奇俄式西餐厅 哈尔滨'},
+      {id:'madierdine',name:'马迭尔西餐厅（俄餐备选）',type:'food',icon:'🍽',lat:45.771319,lon:126.615085,area:'西八道街7号附近',blurb:'1 月 12 日俄式晚餐备选，可试红菜汤、罐焖牛肉。店址曾因宾馆改造迁移，出发前请按高德地图确认现址与营业时间。',tag:'1/12 · 俄餐备选',source:'https://www.amap.com/place/B01C30J7GT',search:'马迭尔西餐厅 中央大街店 西八道街 哈尔滨'},
+      {id:'parkson',name:'百盛购物中心',type:'mall',icon:'🛍',lat:45.776935,lon:126.610673,area:'中央大街222号',blurb:'室内商场，有美食广场；逛江边和中央大街时可在这里暖和一下、吃一餐。',tag:'商场 · 美食',source:'https://www.amap.com/place/B01C30JM0O',search:'百盛购物中心 中央大街店 哈尔滨'},
+      {id:'jinan',name:'金安国际购物广场',type:'mall',icon:'🛍',lat:45.769818,lon:126.614427,area:'中央大街69号',blurb:'购物、餐饮和超市集中，适合在室内坐下来用餐；靠近中央大街南段。',tag:'商场 · 餐饮',source:'https://europlaza.com.cn/file/about.html',search:'金安国际购物广场 哈尔滨'}
+    ];
+    const all = [home,...spots];
+    const typeName = {home:'住宿',sight:'景点与体验',food:'吃东西',mall:'商场',transport:'机场交通'};
+    const typeOrder = {transport:0,sight:1,food:2,mall:3};
+    const $ = id => document.getElementById(id);
+    let filter = 'all', query = '', selected = home, map, markers = new Map(), route;
+
+    function km(a,b) {
+      const r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
+      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
+      return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    }
+    function distanceText(p) { const d=km(home,p); return d<1 ? `${Math.round(d*1000/50)*50} 米` : `${d.toFixed(1)} 公里`; }
+    function amap(p) { return `https://uri.amap.com/search?keyword=${encodeURIComponent(p.search)}&city=${encodeURIComponent('哈尔滨')}`; }
+    function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
+    function renderList() {
+      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || km(home,a)-km(home,b));
+      $('count').textContent=`${visible.length} 个地点 · 按类别及距离排列`;
+      $('places').replaceChildren();
+      if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
+      visible.forEach(p=>{
+        const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
+        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)} ↗</span>`;
+        b.addEventListener('click',()=>select(p,true)); $('places').append(b);
+      });
+    }
+    function renderDetail() {
+      const p=selected, isHome=p.id==='home';
+      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿基点':`距住处直线约 ${distanceText(p)}`}</span><span>${isHome?'2027.01.10—01.16':p.tag}</span></div><div class="detail-actions"><a href="${amap(p)}" target="_blank" rel="noopener noreferrer">在高德地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">地点资料 ↗</a></div>`;
+    }
+    function makeIcon(p, active=false) {
+      return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
+    }
+    function select(p, move) {
+      selected=p; renderList(); renderDetail();
+      if (!map) return;
+      markers.forEach((marker,id)=>marker.setIcon(makeIcon(all.find(x=>x.id===id),id===p.id)));
+      if (route) map.removeLayer(route);
+      if (p.id!=='home') route=L.polyline([[home.lat,home.lon],[p.lat,p.lon]],{color:'#e6a550',weight:3,dashArray:'6 7',opacity:.9}).addTo(map);
+      if (move) map.flyTo([p.lat,p.lon],p.id==='home'?14:Math.max(map.getZoom(),13),{duration:.7});
+    }
+    function updateMarkers() {
+      if (!map) return;
+      spots.forEach(p=>{ const m=markers.get(p.id); if (matching(p)) m.addTo(map); else map.removeLayer(m); });
+    }
+    function fitAll() {
+      if (!map) return;
+      const shown=[home,...spots.filter(matching)];
+      map.fitBounds(L.latLngBounds(shown.map(p=>[p.lat,p.lon])).pad(.12),{padding:[24,24],maxZoom:14});
+    }
+    $('search').addEventListener('input',e=>{ query=e.target.value.trim().toLowerCase();renderList();updateMarkers(); });
+    $('filters').addEventListener('click',e=>{
+      const b=e.target.closest('[data-filter]');if(!b)return;
+      filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));
+      renderList();updateMarkers();
+    });
+    $('nearby').addEventListener('click',()=>{if(map)map.flyTo([home.lat,home.lon],14,{duration:.7});});
+    $('airportbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='airport'),true));
+    $('overview').addEventListener('click',fitAll);
+    document.querySelector('.days').addEventListener('click',e=>{
+      const button=e.target.closest('.spot-link[data-spot]');
+      if (!button) return;
+      const spot=spots.find(p=>p.id===button.dataset.spot);
+      if (!spot) return;
+      select(spot,true);
+      if (window.matchMedia('(max-width:850px)').matches)
+        document.querySelector('.mapwrap').scrollIntoView({behavior:'smooth',block:'start'});
+    });
+    renderList();renderDetail();
+    if (window.L) {
+      map=L.map('map',{zoomControl:false,scrollWheelZoom:true}).setView([home.lat,home.lon],13);
+      const tiles=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
+        subdomains:'abc',maxZoom:17,
+        attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
+      }).addTo(map);
+      let failures=0;
+      tiles.on('tileerror',()=>{ if(++failures>=3) $('fallback').style.display='block'; });
+      L.control.zoom({position:'bottomright'}).addTo(map);
+      all.forEach(p=>{ const m=L.marker([p.lat,p.lon],{icon:makeIcon(p,p.id==='home')}).addTo(map); m.bindTooltip(p.name,{direction:'top',offset:[0,-14]}); m.on('click',()=>select(p,false)); markers.set(p.id,m); });
+      // Keep the initial view useful for the city center; “看全部地点” also includes the distant Volga Manor.
+    } else { $('fallback').style.display='block'; }
+  </script>
+</body>
+</html>
