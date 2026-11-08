@@ -317,12 +317,21 @@
     renderList();renderDetail();
     if (window.L) {
       map=L.map('map',{zoomControl:false,scrollWheelZoom:true}).setView([home.lat,home.lon],13);
-      const tiles=L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{
-        subdomains:'abc',maxZoom:17,
-        attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'
-      }).addTo(map);
-      let failures=0;
-      tiles.on('tileerror',()=>{ if(++failures>=3) $('fallback').style.display='block'; });
+      // Standard OpenStreetMap tiles need a real page origin (Referer). Opened from a sandboxed
+      // preview or file://, they are refused, so fall back to OpenTopoMap after repeated errors.
+      const osm={url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
+      const topo={url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opts:{subdomains:'abc',maxZoom:17,attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
+      const noReferrer=self.origin==='null'||location.protocol==='file:';
+      let tiles, failures=0, usingTopo=false;
+      function useTiles(src){
+        if (tiles) map.removeLayer(tiles);
+        failures=0; tiles=L.tileLayer(src.url,src.opts).addTo(map);
+        tiles.on('tileerror',()=>{
+          if (++failures<3) return;
+          if (!usingTopo) { usingTopo=true; useTiles(topo); } else $('fallback').style.display='block';
+        });
+      }
+      usingTopo=noReferrer; useTiles(noReferrer?topo:osm);
       L.control.zoom({position:'bottomright'}).addTo(map);
       all.forEach(p=>{ const m=L.marker([p.lat,p.lon],{icon:makeIcon(p,p.id==='home')}).addTo(map); m.bindTooltip(p.name,{direction:'top',offset:[0,-14]}); m.on('click',()=>select(p,false)); markers.set(p.id,m); });
       // Keep the initial view useful for the city center; “看全部地点” also includes the distant Volga Manor.
