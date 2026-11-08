@@ -102,7 +102,10 @@
     .leaflet-tile-pane { filter:saturate(.8) contrast(.82) brightness(1.08); }
     .pin { width:32px; height:32px; display:grid; place-items:center; border:2px solid white; border-radius:50%; background:#22465a; font-size:16px; box-shadow:0 3px 12px #17384c88; transition:transform .15s; }
     .pin.sight { background:#4e9fc0; } .pin.food { background:#d77975; } .pin.mall { background:#6aaf83; } .pin.transport { background:#8e74b8; } .pin.homepin { background:#e9a850; }
-    .pin.selected { transform:scale(1.26); box-shadow:0 0 0 5px #fff8,0 5px 16px #17384c88; }
+    .pin.selected { position:relative; transform:scale(1.5); border-color:#fff; box-shadow:0 0 0 4px #ff5a2c,0 0 0 9px rgba(255,90,44,.3),0 6px 18px #17384c99; }
+    .pin.selected::after { content:""; position:absolute; inset:-12px; border:3px solid #ff5a2c; border-radius:50%; animation:pinpulse 1.6s ease-out infinite; pointer-events:none; }
+    @keyframes pinpulse { from { transform:scale(.7); opacity:.9; } to { transform:scale(1.7); opacity:0; } }
+    @media (prefers-reduced-motion:reduce) { .pin.selected::after { animation:none; opacity:.6; } }
     .leaflet-div-icon { border:0; background:transparent; }
     .leaflet-control-attribution { font-size:9px!important; }
     @media(max-width:850px) {
@@ -282,7 +285,7 @@
     function select(p, move) {
       selected=p; renderList(); renderDetail();
       if (!map) return;
-      markers.forEach((marker,id)=>marker.setIcon(makeIcon(all.find(x=>x.id===id),id===p.id)));
+      markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
       if (route) map.removeLayer(route);
       if (p.id!=='home') route=L.polyline([[home.lat,home.lon],[p.lat,p.lon]],{color:'#e6a550',weight:3,dashArray:'6 7',opacity:.9}).addTo(map);
       if (move) map.flyTo([p.lat,p.lon],p.id==='home'?14:Math.max(map.getZoom(),13),{duration:.7});
