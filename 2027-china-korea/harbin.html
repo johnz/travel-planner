@@ -18,6 +18,8 @@
     .app { display:grid; grid-template-columns:615px minmax(0,1fr); height:100vh; height:100dvh; min-height:0; }
     .sidebar { display:flex; flex-direction:column; min-height:0; overflow-y:auto; border-right:1px solid var(--line); background:linear-gradient(160deg,#fff,#f3f8f7 72%); z-index:2; }
     .intro { padding:26px 25px 18px; border-bottom:1px solid var(--line); }
+    .back-home { display:inline-flex; align-items:center; min-height:38px; margin-bottom:16px; padding:7px 12px; border:1px solid #cbdcda; border-radius:9px; background:#fff; color:#176b7b; font-size:14px; font-weight:800; text-decoration:none; }
+    .back-home:hover,.back-home:focus-visible { background:#e1f2ef; outline:2px solid #8ac6c0; outline-offset:2px; }
     .eyebrow { display:flex; align-items:center; gap:8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
     .eyebrow:before { content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold); }
     h1 { margin:13px 0 7px; font-size:29px; line-height:1.24; letter-spacing:-.04em; }
@@ -136,14 +138,17 @@
       .note { top:12px; left:12px; max-width:210px; }
       .maptools { top:12px; right:12px; }
       .detail { right:12px; bottom:20px; left:12px; max-width:none; padding:14px 16px; }
+      .sidebar { font-size:14px; }
+      .eyebrow,.sub,.tripline span,.home strong,.home small,.search input,.filter,.watchlist,.ticket-item strong,.itinerary,.day strong,.extras-label,.spot-link,.extra-note,.listbar,.listbar strong,.place strong,.place small,.distance,.empty,.map-fallback,.note,.maptools button,.detail-kind,.detail p,.detail-meta span,.detail-actions a { font-size:14px; }
     }
-    @media(max-width:470px) { .detail h2 { font-size:17px; } .detail p { font-size:11px; } .maptools button { padding:8px; font-size:11px; } }
+    @media(max-width:470px) { .detail h2 { font-size:17px; } .maptools button { padding:8px; } }
   </style>
 </head>
 <body>
   <main class="app">
     <aside class="sidebar" aria-label="地点清单">
       <header class="intro">
+        <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Harbin · winter 2027</div>
         <h1>住在住处，慢慢逛哈尔滨</h1>
         <p class="sub">以「老道外住处」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。</p>
