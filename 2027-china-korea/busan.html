@@ -162,7 +162,7 @@
       <details class="itinerary" open>
         <summary>🗓 三晚行程草案 <span>已加入收藏美食 · 内部可滚动 ▾</span></summary>
         <div class="days">
-          <div class="day"><strong>1/5 周二 · 抵达与入住</strong><p>11:45 航班到金海机场国际线；入境取行李后去明知见朋友、喝咖啡。下午前往海云台，16:00 后办理入住。</p><p>晚上在美浦或海云台附近吃饭，早点休息。田浦咖啡街和小物店留到别天有精力时再去。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="airport">金海机场</button><button class="spot-link" type="button" data-spot="myeongji">明知咖啡街</button><button class="spot-link" type="button" data-spot="mipojip">尾浦家</button><button class="spot-link" type="button" data-spot="jeonpo-cafe-street">田浦备选</button></div><p class="extra-note">带着行李见朋友前先确认寄放安排；预计 18:00 后才到酒店，要提前联系前台。</p></div>
+          <div class="day"><strong>1/5 周二 · 抵达与入住</strong><p>11:45 航班到金海机场国际线；入境取行李后直接去海云台住宿，先在前台寄存行李。16:00 后办理入住。</p><p>寄存后可在美浦和海云台海边轻松走走、吃午餐；晚上在住处附近吃饭，早点休息。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="airport">金海机场</button><button class="spot-link" type="button" data-spot="home">住宿 · 寄存行李</button><button class="spot-link" type="button" data-spot="mipojip">尾浦家</button><button class="spot-link" type="button" data-spot="beach">海云台海滩</button></div><p class="extra-note">Expedia 列有行李寄存服务，但提前到店的寄存时间最好先向酒店确认。预计 18:00 后才到，提前联系前台。</p></div>
           <div class="day"><strong>1/6 周三 · 海云台亲子日</strong><p>从住处附近的美浦站坐胶囊列车去青沙浦，回海云台吃午餐；下午在 SEA LIFE 玩 2–3 小时。</p><p>晚上就近吃饭。若大家还有精力，再去广安里看大桥夜景；The Bay 101 和田浦小物店都作为可替换的备选。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="mipo">美浦站</button><button class="spot-link" type="button" data-spot="cheongsapo">青沙浦站</button><button class="spot-link" type="button" data-spot="mipojip">尾浦家</button><button class="spot-link" type="button" data-spot="sealife">SEA LIFE</button><button class="spot-link" type="button" data-spot="gwangalli">广安里备选</button><button class="spot-link" type="button" data-spot="bay101">The Bay 101 备选</button><button class="spot-link" type="button" data-spot="jeonpo-cafe-street">田浦备选</button></div><p class="extra-note">胶囊列车通常要提前订时段；冬天海边风大，户外行程可随天气缩短。</p></div>
           <div class="day"><strong>1/7 周四 · 乐天世界</strong><p>09:30–17:00 Lotte World Adventure Busan：旋转木马、童话区、家庭过山车、巡游。</p><p>晚餐：机张市场蒸帝王蟹/雪蟹（打车约 10 分钟），代替原定韩牛烤肉。</p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="lotte">乐天世界</button><button class="spot-link" type="button" data-spot="gijang-market">机张市场</button></div><div class="extras"><span class="extras-label">顺路</span><button class="spot-link" type="button" data-spot="lotte-outlet-dongbusan">乐天奥特莱斯（有 Artbox）</button></div><p class="extra-note">冬季营业时间、巡游场次和身高限制待核实；奥特莱斯按 20 点关门计划。</p></div>
           <div class="day"><strong>1/8 周五 · 去首尔</strong><p>在海云台附近慢慢吃早餐、整理行李；11:00 前退房，直接去釜山站。在车站附近吃猪肉汤饭，约 14:00 乘 KTX 去首尔。<em>车次尚未预订。</em></p><div class="extras"><span class="extras-label">地图</span><button class="spot-link" type="button" data-spot="bonjeon-gukbap">本钱汤饭</button><button class="spot-link" type="button" data-spot="busanstn">釜山站</button><button class="spot-link" type="button" data-spot="kakao-busan-station">Kakao Friends</button></div><p class="extra-note">海东龙宫寺和机张鲍鱼粥可改到 1/6 或 1/7 的早上；退房当天不赶远路。</p></div>
@@ -200,10 +200,9 @@
       area:'海云台海滩东端 · 区域参考', blurb:'住宿已确定。图钉仅标记海云台东端区域，非具体地址。',
       source:'https://www.visitbusan.net/', search:'해운대해수욕장 동쪽' };
     const spots = [
-      {id:'airport',name:'金海国际机场 · 国际线航站楼',type:'transport',icon:'✈',lat:35.172316,lon:128.945886,area:'江西区 · PUS',blurb:'1 月 5 日航班11:45 抵达国际线。到海云台可坐机场巴士或出租车，大约 1 小时左右；也可先去附近的明知见朋友。',tag:'1/5 抵达',source:'https://www.airport.co.kr/gimhaeeng/index.do',search:'김해국제공항 국제선'},
+      {id:'airport',name:'金海国际机场 · 国际线航站楼',type:'transport',icon:'✈',lat:35.172316,lon:128.945886,area:'江西区 · PUS',blurb:'1 月 5 日航班11:45 抵达国际线。入境取行李后直接前往海云台住宿寄存行李；可乘机场巴士或出租车，冬天带行李打车更省力。',tag:'1/5 抵达',source:'https://www.airport.co.kr/gimhaeeng/index.do',search:'김해국제공항 국제선'},
       {id:'busanstn',name:'釜山站 · KTX',type:'transport',icon:'🚄',lat:35.115553,lon:129.042587,area:'东区 · 地铁 1 号线',blurb:'1 月 8 日约 14:00 乘 KTX 去首尔，约 2 小时 30 分钟到首尔站。车次尚未预订；午餐可在车站附近解决。从海云台过去地铁需换乘（2 号线→西面→1 号线）。',tag:'1/8 去首尔',source:'https://www.letskorail.com/',search:'부산역'},
       {id:'haeundaestn',name:'海云台站 · 地铁 2 号线',type:'transport',icon:'🚇',lat:35.163753,lon:129.158747,area:'海云台区',blurb:'去广安里、西面、釜山站可从这里坐 2 号线。住处在海滩东端，冬天带行李往返车站可考虑打车。',tag:'地铁 · 市区交通',source:'https://www.humetro.busan.kr/',search:'해운대역'},
-      {id:'myeongji',name:'明知 · 海边咖啡街一带',type:'sight',icon:'☕',lat:35.087522,lon:128.906872,area:'江西区明知新城',blurb:'1 月 5 日下午与朋友见面、喝咖啡看海。图钉标在明知海边公园一带，具体咖啡店和见面地点以朋友安排为准。离机场较近，离海云台较远。',tag:'1/5 · 见朋友',source:'https://www.openstreetmap.org/search?query=%EB%AA%85%EC%A7%80%20%EC%98%A4%EC%85%98%EC%8B%9C%ED%8B%B0',search:'명지 카페거리'},
       {id:'beach',name:'海云台海滩',type:'sight',icon:'🏖',lat:35.157781,lon:129.158132,area:'海云台区',blurb:'住处附近随时可以去走走；冬天海风大，适合短暂散步拍照。',tag:'海边散步',source:'https://www.visitbusan.net/',search:'해운대해수욕장'},
       {id:'mipo',name:'海云台蓝线公园 · 美浦站',type:'sight',icon:'🚃',lat:35.158171,lon:129.172828,area:'海云台区',blurb:'1 月 6 日上午从这里坐海岸胶囊列车去青沙浦，沿海边看风景。胶囊列车时段常需提前预订。',tag:'1/6 · 胶囊列车起点',source:'https://www.bluelinepark.com/',search:'해운대블루라인파크 미포정거장'},
       {id:'cheongsapo',name:'蓝线公园 · 青沙浦站',type:'sight',icon:'🌊',lat:35.161240,lon:129.191381,area:'海云台区',blurb:'胶囊列车终点，附近有灯塔和海边步道；可坐海边列车或出租车回海云台。',tag:'1/6 · 胶囊列车终点',source:'https://www.bluelinepark.com/',search:'청사포정거장'},
@@ -311,7 +310,7 @@
     document.querySelector('.days').addEventListener('click',e=>{
       const button=e.target.closest('.spot-link[data-spot]');
       if (!button) return;
-      const spot=spots.find(p=>p.id===button.dataset.spot);
+      const spot=all.find(p=>p.id===button.dataset.spot);
       if (!spot) return;
       select(spot,true);
       if (window.matchMedia('(max-width:950px)').matches)
