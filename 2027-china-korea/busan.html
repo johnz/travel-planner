@@ -15,8 +15,8 @@
     button,input,a { font:inherit; }
     button { cursor:pointer; }
     a { color:inherit; }
-    .app { display:grid; grid-template-columns:minmax(350px,410px) minmax(0,1fr); min-height:850px; }
-    .sidebar { display:flex; flex-direction:column; min-height:850px; max-height:850px; overflow-y:auto; border-right:1px solid var(--line); background:linear-gradient(160deg,#fff,#f3f8f7 72%); z-index:2; }
+    .app { display:grid; grid-template-columns:615px minmax(0,1fr); height:100vh; height:100dvh; min-height:0; }
+    .sidebar { display:flex; flex-direction:column; min-height:0; overflow-y:auto; border-right:1px solid var(--line); background:linear-gradient(160deg,#fff,#f3f8f7 72%); z-index:2; }
     .intro { padding:26px 25px 18px; border-bottom:1px solid var(--line); }
     .eyebrow { display:flex; align-items:center; gap:8px; color:var(--gold); font-size:11px; font-weight:800; letter-spacing:.18em; text-transform:uppercase; }
     .eyebrow:before { content:""; width:7px; height:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 12px var(--gold); }
@@ -86,7 +86,7 @@
     .place small { display:block; margin-top:3px; color:var(--muted); font-size:11px; line-height:1.4; }
     .distance { color:#53707a; font-size:10px; white-space:nowrap; }
     .empty { padding:22px 12px; color:var(--muted); font-size:13px; line-height:1.6; }
-    .mapwrap { position:relative; min-height:850px; background:#eef3f1; }
+    .mapwrap { position:relative; min-height:0; background:#eef3f1; }
     #map { position:absolute; inset:0; z-index:0; }
     .map-fallback { display:none; position:absolute; top:20px; left:20px; right:20px; z-index:1; padding:14px; border:1px solid #d9e5e3; border-radius:10px; background:#fff; color:#173843; box-shadow:0 10px 35px #0002; font-size:13px; }
     .maptools { position:absolute; top:18px; right:18px; z-index:500; display:flex; flex-direction:column; gap:8px; }
@@ -111,8 +111,23 @@
     @media (prefers-reduced-motion:reduce) { .pin.selected::after { animation:none; opacity:.6; } }
     .leaflet-div-icon { border:0; background:transparent; }
     .leaflet-control-attribution { font-size:9px!important; }
-    @media(max-width:850px) {
-      .app { display:flex; flex-direction:column; }
+    @media(min-width:951px) {
+      .sidebar { font-size:14px; }
+      .sidebar .eyebrow,.sidebar .home small,.sidebar .tripline span,.sidebar .filter,.sidebar .day strong,.sidebar .listbar,.sidebar .place small { font-size:14px; }
+      .sidebar h1 { font-size:32px; }
+      .sidebar .sub,.sidebar .home strong,.sidebar .search input,.sidebar .place strong,.sidebar .empty { font-size:16px; }
+      .sidebar .homeicon { font-size:24px; width:42px; height:42px; }
+      .sidebar .home-arrow { font-size:24px; }
+      .sidebar .search { height:44px; }
+      .sidebar .watchlist,.sidebar .itinerary { font-size:14px; }
+      .sidebar .ticket-item strong,.sidebar .listbar strong { font-size:16px; }
+      .sidebar .extras-label,.sidebar .spot-link,.sidebar .extra-note,.sidebar .distance { font-size:14px; }
+      .sidebar .days { max-height:400px; }
+      .sidebar .place { grid-template-columns:40px minmax(0,1fr) auto; }
+      .sidebar .placeicon { width:40px; height:40px; font-size:20px; }
+    }
+    @media(max-width:950px) {
+      .app { display:flex; flex-direction:column; height:auto; min-height:0; }
       .sidebar { max-height:none; min-height:0; overflow:visible; border-right:0; }
       .intro { padding:19px 18px 15px; }
       h1 { font-size:24px; }
