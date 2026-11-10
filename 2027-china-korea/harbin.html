@@ -344,8 +344,11 @@
       if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
       if (p.id!=='home' && routeData(p)?.[2]) {
         routeLayer=L.polyline(decodePolyline(routeData(p)[2]),{color:walking[p.id]?'#30a9a0':'#e6a550',weight:5,opacity:.95}).addTo(map);
-        map.fitBounds(routeLayer.getBounds(),{paddingTopLeft:[24,24],paddingBottomRight:[24,140],maxZoom:14});
-      } else if (move) map.flyTo([p.lat,p.lon],14,{duration:.7});
+      }
+      if (p.id!=='home') {
+        const bottomPadding=Math.min($('detail').offsetHeight+36,Math.floor(map.getSize().y*.62));
+        map.fitBounds(L.latLngBounds([[home.lat,home.lon],[p.lat,p.lon]]),{paddingTopLeft:[28,28],paddingBottomRight:[28,bottomPadding],maxZoom:16});
+      } else if (move) map.flyTo([p.lat,p.lon],15,{duration:.7});
     }
     function updateMarkers() {
       if (!map) return;
