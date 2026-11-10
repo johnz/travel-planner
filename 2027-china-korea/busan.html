@@ -192,6 +192,7 @@
     </section>
   </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="map-controls.js"></script>
   <script>
     // WGS84 coordinates from OpenStreetMap/Nominatim. The home marker is at the LCT complex,
     // not the residence's specific reception entrance or apartment.
@@ -248,11 +249,8 @@
       {id:'kakao-busan-station',name:'Kakao Friends 釜山站店',type:'shop',icon:'🧸',lat:35.1151718,lon:129.0427906,area:'釜山站二楼',blurb:'在 KTX 釜山站二楼候车区旁，每天 8:00–22:00，等车时最后买点东西。2026 年 1 月资料确认过，之后未再核实。',tag:'1/8 中午 · 釜山站',source:'https://blog.naver.com/mimimomokk/224143763112',search:'카카오프렌즈 부산역점'},
       {id:'yuhaeng-tongsin',name:'流行通信 小物店',type:'shop',icon:'🎁',lat:35.1003275,lon:129.0285379,area:'南浦·国际市场',blurb:'流行小物：三丽鸥、键帽钥匙扣、捏捏玩具等。每天 9:30–19:00，晚上去会关门。',tag:'可选 · 南浦半日',source:'https://blog.naver.com/mericyu/224361893797',search:'유행통신 남포동'}
     ];
-    const all = [home,...spots];
     const typeName = {home:'已订住宿',sight:'景点与体验',food:'吃东西',transport:'机场车站',street:'逛街文化',shop:'创意小物'};
     const typeOrder = {transport:0,sight:1,street:2,shop:3,food:4};
-    const $ = id => document.getElementById(id);
-    let filter = 'all', query = '', selected = home, map, markers = new Map(), routeLayer;
     // OSRM routes from the LCT complex, fetched 2026-11-10. Values are [meters, seconds, encoded polyline].
     // These model times exclude live traffic, pick-up, parking and walks to the actual entrances.
     const driving = {
@@ -324,130 +322,25 @@
       "shop-almond":[1598,1281,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@kI~GXdBIDUhBiBd@e@`@}@AEVaA`AdA|BuB|ArBnEcDrCjA`C"],
       "artbox-haeundae":[1410,1128,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDY~S?lAt@jL[NCd@sC`C?LgHzFDLaCpB"]
     };
-    function walkingRoute(p) { const route=walking[p.id]; return route?.[0]<=1000 ? route : null; }
-    function routeData(p) { return walkingRoute(p) || driving[p.id]; }
-    function modeText(p) { return walkingRoute(p) ? '步行' : '驾车'; }
-    function distanceText(p) {
-      const meters=routeData(p)?.[0];
-      if (meters==null) return '车程待查';
-      return meters<1000 ? `${Math.round(meters/50)*50} 米` : `${(meters/1000).toFixed(1)} 公里`;
-    }
-    function durationText(p) {
-      const seconds=routeData(p)?.[1];
-      if (seconds==null) return '';
-      if (p.id==='airport') return '预留 60–80 分钟';
-      const minutes=seconds/60;
-      if (walkingRoute(p)) {
-        const low=Math.max(5,Math.ceil(minutes/5)*5);
-        const high=Math.max(low+5,Math.ceil(minutes*1.25/5)*5);
-        return `约 ${low}–${high} 分钟`;
-      }
-      const low=Math.max(5,Math.ceil((minutes*1.5+5)/5)*5);
-      const high=Math.max(low+5,Math.ceil((minutes*2.1+10)/5)*5);
-      return `预留 ${low}–${high} 分钟`;
-    }
-    function decodePolyline(encoded) {
-      let index=0, lat=0, lon=0;
-      const points=[];
-      while (index<encoded.length) {
-        const deltas=[];
-        for (let axis=0; axis<2; axis++) {
-          let value=0, shift=0, byte;
-          do { byte=encoded.charCodeAt(index++)-63; value|=(byte&31)<<shift; shift+=5; } while (byte>=32);
-          deltas.push(value&1 ? ~(value>>1) : value>>1);
+    window.createTripMap({
+      home, spots, driving, walking, typeName, typeOrder,
+      missingDistanceText:'车程待查', airportDuration:'预留 60–80 分钟',
+      formatDuration(minutes,isWalking) {
+        if (isWalking) {
+          const low=Math.max(5,Math.ceil(minutes/5)*5);
+          const high=Math.max(low+5,Math.ceil(minutes*1.25/5)*5);
+          return `约 ${low}–${high} 分钟`;
         }
-        lat+=deltas[0]; lon+=deltas[1];
-        points.push([lat/1e5,lon/1e5]);
-      }
-      return points;
-    }
-    function naver(p) { return `https://map.naver.com/p/search/${encodeURIComponent(p.search)}`; }
-    function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
-    function renderList() {
-      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (routeData(a)?.[0]??Infinity)-(routeData(b)?.[0]??Infinity));
-      $('count').textContent=`${visible.length} 个地点 · 按类别及路线距离排列`;
-      $('places').replaceChildren();
-      if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
-      visible.forEach(p=>{
-        const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
-        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${modeText(p)} ${distanceText(p)}<br>${durationText(p)} ↗</span>`;
-        b.addEventListener('click',()=>select(p,true)); $('places').append(b);
-      });
-    }
-    function renderDetail() {
-      const p=selected, isHome=p.id==='home';
-      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿位置':`距住处：${modeText(p)} ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${isHome?'住宿资料':'地点资料'} ↗</a></div>`;
-    }
-    function makeIcon(p, active=false) {
-      return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
-    }
-    function select(p, move) {
-      selected=p; renderList(); renderDetail();
-      if (!map) return;
-      markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
-      if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
-      if (p.id!=='home' && routeData(p)?.[2]) {
-        const points=decodePolyline(routeData(p)[2]);
-        routeLayer=L.layerGroup([
-          L.polyline(points,{color:'#fff',weight:9,opacity:.95,interactive:false}),
-          L.polyline(points,{color:'#16a9f5',weight:5,opacity:1,interactive:false})
-        ]).addTo(map);
-      }
-      if (p.id!=='home') {
-        const bottomPadding=Math.min($('detail').offsetHeight+36,Math.floor(map.getSize().y*.62));
-        map.fitBounds(L.latLngBounds([[home.lat,home.lon],[p.lat,p.lon]]),{paddingTopLeft:[28,28],paddingBottomRight:[28,bottomPadding],maxZoom:16});
-      } else if (move) map.flyTo([p.lat,p.lon],15,{duration:.7});
-    }
-    function updateMarkers() {
-      if (!map) return;
-      spots.forEach(p=>{ const m=markers.get(p.id); if (matching(p)) m.addTo(map); else map.removeLayer(m); });
-    }
-    function fitAll() {
-      if (!map) return;
-      const shown=[home,...spots.filter(matching)];
-      map.fitBounds(L.latLngBounds(shown.map(p=>[p.lat,p.lon])).pad(.08),{padding:[24,24],maxZoom:15});
-    }
-    $('search').addEventListener('input',e=>{ query=e.target.value.trim().toLowerCase();renderList();updateMarkers(); });
-    $('filters').addEventListener('click',e=>{
-      const b=e.target.closest('[data-filter]');if(!b)return;
-      filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));
-      renderList();updateMarkers();
+        const low=Math.max(5,Math.ceil((minutes*1.5+5)/5)*5);
+        const high=Math.max(low+5,Math.ceil((minutes*2.1+10)/5)*5);
+        return `预留 ${low}–${high} 分钟`;
+      },
+      navigationUrl:p=>`https://map.naver.com/p/search/${encodeURIComponent(p.search)}`,
+      navigationLabel:'在 Naver 地图查看', sourceLabel:isHome=>isHome?'住宿资料':'地点资料',
+      homeMeta:'住宿位置', homeDates:'2027.01.05—01.08',
+      initialZoom:11, initialView:'all', nearbyZoom:15, overviewPadding:.08, overviewMaxZoom:15,
+      quickLinks:{airportbtn:'airport',stationbtn:'busanstn'}
     });
-    $('nearby').addEventListener('click',()=>{if(map)map.flyTo([home.lat,home.lon],15,{duration:.7});});
-    $('airportbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='airport'),true));
-    $('stationbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='busanstn'),true));
-    $('overview').addEventListener('click',fitAll);
-    document.querySelector('.days').addEventListener('click',e=>{
-      const button=e.target.closest('.spot-link[data-spot]');
-      if (!button) return;
-      const spot=all.find(p=>p.id===button.dataset.spot);
-      if (!spot) return;
-      select(spot,true);
-      if (window.matchMedia('(max-width:950px)').matches)
-        document.querySelector('.mapwrap').scrollIntoView({behavior:'smooth',block:'start'});
-    });
-    renderList();renderDetail();
-    if (window.L) {
-      map=L.map('map',{zoomControl:false,scrollWheelZoom:true}).setView([home.lat,home.lon],11);
-      // Standard OpenStreetMap tiles need a real page origin (Referer). Opened from a sandboxed
-      // preview or file://, they are refused, so fall back to OpenTopoMap after repeated errors.
-      const osm={url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
-      const topo={url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opts:{subdomains:'abc',maxZoom:17,attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
-      const noReferrer=self.origin==='null'||location.protocol==='file:';
-      let tiles, failures=0, usingTopo=false;
-      function useTiles(src){
-        if (tiles) map.removeLayer(tiles);
-        failures=0; tiles=L.tileLayer(src.url,src.opts).addTo(map);
-        tiles.on('tileerror',()=>{
-          if (++failures<3) return;
-          if (!usingTopo) { usingTopo=true; useTiles(topo); } else $('fallback').style.display='block';
-        });
-      }
-      usingTopo=noReferrer; useTiles(noReferrer?topo:osm);
-      L.control.zoom({position:'bottomright'}).addTo(map);
-      all.forEach(p=>{ const m=L.marker([p.lat,p.lon],{icon:makeIcon(p,p.id==='home')}).addTo(map); m.bindTooltip(p.name,{direction:'top',offset:[0,-14]}); m.on('click',()=>select(p,false)); markers.set(p.id,m); });
-      fitAll();
-    } else { $('fallback').style.display='block'; }
   </script>
 </body>
 </html>

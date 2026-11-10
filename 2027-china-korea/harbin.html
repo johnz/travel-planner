@@ -231,6 +231,7 @@
     </section>
   </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="map-controls.js"></script>
   <script>
     // Coordinates are WGS84 for OpenStreetMap. The homestay pin uses the listing's map coordinate;
     // confirm the actual building entrance with the host. Other pins mark POIs or district centers.
@@ -269,144 +270,33 @@
       {id:'parkson',name:'百盛购物中心',type:'mall',icon:'🛍',lat:45.776935,lon:126.610673,area:'中央大街222号',blurb:'室内商场，有美食广场；逛江边和中央大街时可在这里暖和一下、吃一餐。',tag:'商场 · 美食',source:'https://www.amap.com/place/B01C30JM0O',search:'百盛购物中心 中央大街店 哈尔滨'},
       {id:'jinan',name:'金安国际购物广场',type:'mall',icon:'🛍',lat:45.769818,lon:126.614427,area:'中央大街69号',blurb:'购物、餐饮和超市集中，适合在室内坐下来用餐；靠近中央大街南段。',tag:'商场 · 餐饮',source:'https://europlaza.com.cn/file/about.html',search:'金安国际购物广场 哈尔滨'}
     ];
-    const all = [home,...spots];
     const typeName = {home:'住宿',sight:'景点与体验',food:'吃东西',mall:'商场',transport:'机场交通'};
     const typeOrder = {transport:0,sight:1,food:2,mall:3};
-    const $ = id => document.getElementById(id);
-    let filter = 'all', query = '', selected = home, map, markers = new Map(), routeLayer;
     /* ROUTE_DATA_START */
     // Routes start at the confirmed hotel listing map coordinate.
     const driving = {"airport":[38951,1793,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@tBc@lB_@zBc@vBc@jB_@JC`B_@l@K`@IlCg@bEw@lE{@p@~INdB~@bEJRNRDDhInFzA`AnBlAbDvBjFlDdCtAjG~DrG`Fx@n@bXvStAtAvLzKnFrEPPfIlHfI`IJHxWbVz@t@v@`A~CxCrEbEDBDDbBfBhAdAjD|CfKpJdAxAbD|FjBdDfCrEb@t@p@hAbBzC`AfBR\\rIzN~@zA`A`BfBxBpAhAtAfA~BjBl@f@pDbEZb@nAlBxD|GrQz[FJ`@v@lMrTpFhJR^~ClFxSf_@^l@lExHxCjExCdE|]fh@`@h@hBvCd@r@Nf@Jf@BV@b@Ax@AjAWhKA`@?T@LDn@Jl@Ph@Td@V^\\XXNFBd@Jd@@^\\VZT^h@jA^hBnHf^hExSHhA@`@@^C`@E|@MXKZG\\E^En@@n@Dl@Jl@Nf@Rd@TZVTZPZLzBtCz@bB`@rArBfJf@|Brk@noCvH~^~Jte@pUrgAjNro@p[vtAza@xdBzClMrAtFjAfFhAhFv@|DR~@r@vDl@`Dl@hDv@nE^bCPlAbA|GlAjJP|A\\|ClApLnD~]fG|l@pSxsB`OdzAnJpaA~@dJnGto@z@zIzBtTlElc@l@`Gb@hEz@|Hh@vEd@tDfAzIx@rGxF`d@nH`l@hDxXf@fENxALtAJpAHtAJrBFdCDzDArEEvBEfBKxBQxBWvCOtA[|B[rBYbBYpAkC|KcAdF[~AWjBUbBYpCUdCOjBM`BGfAEz@Cx@ArA?fCDxK?b@@ZFrDD|BJjDJ|EHxDFlCHbEBnCDvCBtBBbALtEHbD\\lQRxIFlAHhBNrBN~ARfBRzATvARlAVxAxB~KtTthAz@dEl@hCv@|CjAjEx@nChAhDn@`BtFnNfB|DfBtCj@z@~A~BrApB~@pA`DhElLzNrZb_@\\`@xMdPnG~HNY~@_CTY~BnCB?@ADKFKDIDKLW\\\\TXfCrCXi@FMJSFMJQFKJUFKLWBGLUP_@Tc@FKLY@E?C?C"],"baroque":[930,88,"qcmvGc`|cWW{@]eAzDoDxDmDCOpCyDpJkL~@tCjAvDd@jDRh@"],"central":[2510,147,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWVf@JZlAjOJf@"],"sophia":[2815,193,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rf@W\\Qn@]r@[fJgErEoBlAi@fW}KNIbIoDlA|J|AjLBTF`@j@rE"],"flood":[2345,162,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHuGpAkDp@QD}BlAJ`@nBpIpAvFb@|ABFDBF?D?HA"],"rivercarnival":[2297,158,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHuGpAkDp@QD}BlAJ`@nBpIpAvFJ^"],"railbridge":[12318,1139,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@L@H?PA^CHANAXCx@IHAT?RBNHPLNTJVHZDZ@^Ab@C\\M^IXe@PMDIBK@K?K?IAIEICIGEEIIEGGKEOESE_@AW@WBYF[JYLQPMPGPEJ?R@RHPJLRHPJ\\BX@\\CZUhAa@rAM`@q@rA_RrX_c@bo@oGnJwDpEkBjCaPvUSa@_BcDoF_KUe@cImOoD{GmBqDSe@Yg@s@_BiB_Ek@wAyA{DmAmDM]kAqDKYcD}JEOUu@`@o@FMHMDMFOBO@SAMEQ_A_CaAiCIUEOCQCQAU@YjN_NDEFCDCF?D@FBDFFFDFDHdAxBBDDDBBD?B?BC@C@G?KqBiGyFaQSk@Um@uA{DCIsAlAwBeGgAaD[}@K[_AsCi@}Aq@qBq@oBq@uB_@gA[_Am@gBWy@_AsCoC{Iw@aCc@uACGgBwF~@{@`@Q^G`@F@IHuAP{@l@_APmAv@oBMeBuBcLu@}DeA{Fi@aDEa@MoAMaAGO??"],"zhaolin":[2466,150,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWMQaI~Ae@J"],"ice":[10056,540,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@L@H?PA^CHANAXCx@IHAT?RBNHPLNTJVHZDZ@^Ab@C\\M^IXe@PMDIBK@K?K?IAIEICIGEEIIEGGKEOESE_@AW@WBYF[JYLQPMPGPEJ?R@RHPJLRHPJ\\BX@\\CZUhAa@rAM`@q@rA_RrX_c@bo@oGnJwDpEkBjCaPvUEFcWp_@_KcU@SCUGQMMMEQBKDILCFAHCR@RDPHNJFLBLAR\\pIhSvB~E~ApDPr@CbAQ|@gDlF_JrMLb@~I_NxCwEFO"],"tiger":[13365,708,"qcmvGc`|cWW{@iAz@kCeKiBoJ]mBe@wB_AqF_AsDaBgEiEuJgAyCcA{BOWK]wAeHcBkIgBoIeBsIcBoIqAyGTMtAu@xBmAfDiBLKh@g@??\\SpEaCYmAqEjCaBtAgJrEoQnJiDhB}A~@_Aj@}s@z_@}J~EuNzGeq@~ZuBbAyB`AwBbAkCdAm@VaAb@m@XoLtFaAb@kA^{Cl@q@Jq@FiFXsHJm@Bu]hAuCN_BN}AR{@RiATgCx@IB_ElBYXYVMLOLXjAPj@|Ovl@Nl@BJFPLb@|Mlg@p@hC|HxYzDxNPf@Nl@Hd@lLdc@D^Nv@FTpDlRrEbVvAvGdBpGtB~G~B`G~ApDjQf`@Rd@JZTw@Lc@EO`CsIpC{J`@oAlF}JRoA`@c@FMfIyN"],"theatre":[11898,631,"qcmvGc`|cWW{@iAz@kCeKiBoJ]mBe@wB_AqF_AsDaBgEiEuJgAyCcA{BOWK]wAeHcBkIgBoIeBsIcBoIqAyGTMtAu@xBmAfDiBLKh@g@??\\SpEaCYmAqEjCaBtAgJrEoQnJiDhB}A~@_Aj@}s@z_@}J~EuNzGeq@~ZuBbAyB`AwBbAkCdAm@VaAb@m@XoLtFaAb@kA^SRKLEHAN?JDLDHHDJ@VBLEJEbA]x@]pL_Gl@_@RnBRbBNdARjAlDzQXnAFZx@vD~BvIV`ALd@b@|ALf@rG`VH\\xCbL~ClLvCdLJZpE~PRt@pCjLJL~O`UfAzK@PHEhBo@XKnF{BZ~AFZHf@R`BDr@J|AFfB@r@?v@?v@Az@Cx@Ez@IhAIfAI|@MfAIjACr@ClAErCBlB{@lkAAbA[N{@^gAt@q@t@e@p@e@v@a@`AY~@Or@"],"bath":[9318,469,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@NZHPBPVrBHf@DPFTJVLVnDzGNXdArBXhAHPz@hAV\\^^`Ab@PHPBXBF?LARExAa@n@gAFKzB}AxC}BlH_FhGcERMrKaHHGRQ|AcAhAa@^IdCPjAx@nLjJRNbAfAdFnD~A`ApAt@bClBhBnAbD~BtAbA\\Xd@h@zBvDfDpGlDpGrDvGNVdCfElE|Hz@~Ad@`Ab@x@nAbCP\\FTH\\BZB`@JlKBbABlB@x@HfClAb]JbCcA`@IDm@Xm@TaAVaAP"],"guandong":[9438,483,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@NZHPBPVrBHf@DPFTJVLVnDzGNXdArBXhAHPz@hAV\\^^`Ab@PHPBXBF?LARExAa@n@gAFKzB}AxC}BlH_FhGcERMrKaHHGRQ|AcAhAa@^IdCPjAx@nLjJRNbAfAdFnD~A`ApAt@bClBhBnAbD~BtAbA\\Xd@h@zBvDfDpGlDpGrDvGNVdCfElE|Hz@~Ad@`Ab@x@nAbCP\\FTH\\BZB`@JlKBbABlB@x@HfClAb]JbCBf@j@UEg@KgBOoC]aJ"],"binguo":[4623,263,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@tBc@lB_@zBc@vBc@jB_@JC`B_@l@K`@IlCg@bEw@lE{@p@~INdB~@bEJRNRDDhInFzA`AnBlAbDvBoBvNgBtMGZwCjJ}BlHc@rA"],"sun":[11360,819,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@L@H?PA^CHANAXCx@IHAT?RBNHPLNTJVHZDZ@^Ab@C\\M^IXe@PMDIBK@K?K?IAIEICIGEEIIEGGKEOESE_@AW@WBYF[JYLQPMPGPEJ?R@RHPJLRHPJ\\BX@\\CZUhAa@rAM`@q@rA_RrX_c@bo@oGnJwDpEkBjCaPvUSa@_BcDoF_KUe@cImOoD{GmBqDSe@Yg@s@_BiB_Ek@wAyA{DmAmDM]kAqDKYcD}JEOUu@`@o@FMHMDMFOBO@SAMEQ_A_CaAiCIUEOCQCQAU@YjN_NDEFCDCF?D@FBDFFFDFDHdAxBBDDDBBD?B?BC@C@G?KqBiGyFaQSk@Um@uA{DCIsAlA}BpB]ZeA~@y@t@g@b@eB|AQN_@\\kBbBq@l@EEEEGAkDqJACEFGBE?GAEEACuCrCaA`A}@z@AB}BzBY[]Q[A"],"polar":[9027,503,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPtApHl@`DXzAtCzNx@lEhA|Fr@lDbA|C|AbEfE~JtBbFVl@b@p@NP`EvDnAlApBbBdMjKfAx@pIjHbFbEPLfG~EbGzEfA|@L@H?PA^CHANAXCx@IHAT?RBNHPLNTJVHZDZ@^Ab@C\\M^IXe@PMDIBK@K?K?IAIEICIGEEIIEGGKEOESE_@AW@WBYF[JYLQPMPGPEJ?R@RHPJLRHPJ\\BX@\\CZUhAa@rAM`@q@rA_RrX_c@bo@oGnJwDpEkBjCaPvUSa@_BcDoF_KUe@cImOoD{GmBqDSe@Yg@s@_BiB_Ek@wAyA{DmAmDM]GFGDy@v@qAjAKJEEOGaAOi@I?QBgA"],"hayao":[9089,441,"qcmvGc`|cWW{@iAz@kCeKiBoJ]mBe@wB_AqF_AsDaBgEiEuJgAyCcA{BOWK]wAeHcBkIgBoIeBsIcBoIqAyG]aByBiKAIaFwUI_@}EmU}C}NqGsZCOGUcGoYCMc@eBIu@Iw@Ck@Ag@?k@?k@Bm@n@qHXeDFs@Hq@D]Nm@Li@Ro@\\{@LW~AkDd@eATe@Pc@Pc@Rm@FWF]Li@Jm@Fi@Dm@PqEZyHN}CL}AJw@He@Li@Pm@Ri@Xq@Rc@Ta@Va@\\_@\\[hA}@`EsCtAi@xG}E|BeAhEu@\\EpCg@bIwAzDo@^GlIwAVEzBUfFaApQiC|]}FvLeBXBtP}CjBYvDi@jBMfE}@TPJOJKd@QfDu@jC_@pDq@`GiAdDe@h@pIyDp@"],"volga":[28949,1737,"qcmvGc`|cWTv@fJuJp@`CFLFPJTv@fB^t@|@hBzAhD^t@JRbBw@XO@?dLqFvAm@Na@j@mB`CuHzCoJ~CmKDMDKl@kBvAuEfG{RDBHBH?H?HCHCHGFGFKDMBMBO@O?QCOCMCMBc@F_@HY~AoF`@uATs@H]LgAp@uBX{@^iAHUTq@To@Zq@hCuFhCuFfGeMFKBI~AaDhBsDd@aAh@iAvF_MbKkINSNUHWDYTgAXo@Vc@vAAvFDhIh@P?rFT`DL`GVrFTv@JtDRvFXdFL`DLH@f@EDAr@GT?bJVp[tA`H|MdBpCLPZ^Xa@vAeBbEuFfGmIr@aAtE_FbCwC`F{F\\SBAtAmAhBcARGXB^G~FaBd@Mb@Mx@UpDeAxDkAr@WdNeExC}@`DeAhDaADBJBJ@J?HEJEFIFMDMBO@M?MAMAMEMGMGIIGIEKA_@{@OiAy@mFUgB}@}G{@uGU_AoDgYIq@w@eHK}@sBePAsAMuA[_AmBgQ}BqPmCwRyBsQcAiJCg@?m@nB{ZF{@j@kH`@iEDe@|@cLr@eJd@eGr@_JVgFPcC~@wLhAsNBg@ZcEd@mGtBuWh@mHhCm\\`@sER_CBU|AcT\\iEnBaXh@uHb@_GHgAnAuPB_@~@}L~@oLb@sFBY|A_MhJ_u@jC}SBS|BkQhBoNvEs_@ViBbBiMxGaj@tAwKzIlCnInCdAz@|NxEJwATkDLgC^sHj@iPHkAFy@LcAZaCf@uDpCwRbBsKbAkGv@uEl@iDtAmH\\mB|A_IbDqPxCiOxA{IhAeH\\cDRiBNiBZ}CDm@D]rBgS~@sJFg@Ha@T{@v@yBbCmFfA_C|@sBZq@N]|@eCPw@h@aC|@mELs@`@aF`@{EXyCJiAj@}HJkB@KBi@A{CMoCEy@a@wIJ{APkANq@BMJq@t@{IViD^oEFo@XiC^iDf@sEtA}GdAgFvEkU|AgDdEiH|DqGjB{C|FkJBET_@pDoEdHwId@}@~@eC|BaIzAuCxDiEtNeM~X_UfNiLl@o@rCiGrFqL|AqCfDcGxCkIbBiFxHuLr@gAuA_CQU~@u@J_@LeCEoAm@uBwAiCMOSQ"],"songsong":[10077,546,"qcmvGc`|cWTv@fJuJp@`CFLFPJTv@fB^t@|@hBzAhD^t@JRbBw@XO@?dLqFvAm@Na@j@mB`CuHzCoJ~CmKDMDKl@kBvAuEfG{RDBHBH?H?HCHCHGFGFKDMBMBO@O?QCOCMCMBc@F_@HY~AoF`@uATs@H]LgAp@uBX{@^iAHUTq@To@Zq@hCuFhCuFfGeMFKBI~AaDhBsDd@aAh@iAvF_MbKkINSNUHWDYTgAXo@Vc@vAAvFDhIh@P?rFT`DL`GVrFTv@JtDRvFXdFL`DLH@f@EDAr@GT?bJVp[tA`H|MdBpCLPZ^r@h@`BdA|L|HNFhC|AnAt@bF~CzD~BNJnDzBbBdAhAt@xD`ChGtDR^hBfAd@PzG`EdAn@`HfExAz@`Al@~KzG~DhC`NdJdHdE~HxErN|IDUeLeHWQuBuBgDmB"],"market":[3080,186,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@tBc@lB_@zBc@vBc@jB_@JCAYs@oJEq@\\MxFgB"],"hongjiang":[326,37,"qcmvGc`|cWTv@fJuJn@xB"],"laodingfeng":[283,34,"qcmvGc`|cWTv@fJuJHV"],"laochujia":[2620,174,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@AVr@fKDl@LrA"],"madierice":[2644,177,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@AVr@fKDl@TnC"],"shanhetun":[2013,148,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@MH|ANfCBl@JnB@F"],"springpancake":[1862,129,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rf@W\\Qn@]r@[fJgE~@lLVlDmC`@"],"russiandine":[1904,123,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rf@W\\Qn@]r@[fJgErEoBt@hG^hD^rC"],"madierdine":[2582,160,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@tBc@d@xG"],"parkson":[2131,114,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PB~@~@lPl@dD"],"jinan":[2766,175,"qcmvGc`|cWTv@t@dCn@rBv@xBxA`EuBbAWLBRFXfApFtA|GPx@Z|AhAlF~@|DJ^J\\Pd@f@bAj@t@TXXXr@`@x@b@dA^`Cr@XH`@Rd@RlAb@^Td@~@Jp@RrENnCLrB`@tHD|@T|G@PXCj@Ml@MjAUtBc@zBe@vBc@vBe@zAWj@MfBYvBc@tBc@lB_@zBc@v@xK"]};
     const walking = {"baroque":[616,492,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fBxCkEhBgCNd@"],"sophia":[2649,2119,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fBxCkEdAxBb@x@Vd@x@`BpAoA|BkAnCsAnAbEDTRfAp@t@`@ZfZhYR\\p@hEbFkBNGl@lFbIqDD\\lA|J|AjLBTF`@j@rE"],"flood":[2838,2271,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRsGzCoAj@}BfAiB|@YNkDfBq@^MF]KBXAZGVEFf@jCLp@lAtF^lBb@rCd@`DhD|QKFd@|BPv@DTP|@P|@jAfCR?x@rDBLZpAXpABLrBfIr@vCNp@dApEdBlHVOFXHMLILGLCN@LBLHJLHNFPDZUBAKCICICIGEEEGEGAG?G?GBGBEDEFEHCHAHAJ?J?F"],"rivercarnival":[2534,2027,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRsGzCoAj@}BfAiB|@YNkDfBq@^MF]KBXAZGVEFf@jCLp@lAtF^lBb@rCd@`DhD|QKFd@|BPv@DTP|@P|@fC~KJ`@nAzF`@dBHZLd@n@xCX|A`A`DKFYPUPBHHEDN??"],"railbridge":[2706,2165,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRsGzCoAj@}BfAiB|@YNkDfBq@^MF]KBXAZGVEFf@jCLp@lAtF^lBb@rCd@`DhD|QKFd@|BLEFEj@WL@xD{AHZOHDV@@eChAiCjA@JsYrM"],"zhaolin":[2305,1844,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRbBw@`@|BjC`OTKpDeBp@~ExHfBdCdNBNf@fED\\t@hG^hDx@pG`BtMWJQHAEGCQHG@CLo@R[VI?YRULQ@WDM?O@CMC[GW"],"hongjiang":[394,315,"qcmvGc`|cWTv@t@dCjJkJFPdAuA@C"],"laodingfeng":[283,226,"qcmvGc`|cWTv@fJuJHV"],"shanhetun":[2715,2172,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRbBw@`@|BjC`OTKpDeBp@~ExHfBdCdNBNf@fED\\t@hG^hDx@pG`BtMWJQHAEGCQHG@CLo@RAVKj@GZG\\If@Yt@S\\Sd@G`@?H?N@PBR{Bd@uBb@ZfF{B`@Bl@JnB@F"],"springpancake":[2397,1918,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRbBw@`@|BjC`OTKpDeBp@~ExHfBdCdNBNf@fED\\t@hG^hDx@pG`BtMWJQHAEGCQHWg@MKOEm@PEGW_@SOc@I]DGAu@AOBCQGGAMi@F_@HOD"],"russiandine":[1861,1489,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRbBw@`@|BjC`OTKpDeBp@~ExHfBdCdNBNf@fED\\t@hG^hD^rC"],"madierdine":[2621,2097,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRbBw@`@|BjC`OTKpDeBp@~ExHfBdCdNBNf@fED\\t@hG^hDx@pG`BtMpAg@fBk@pBq@rBo@Df@v@~I@Vd@xG"],"parkson":[2913,2331,"qcmvGc`|cWTv@t@dCjJkJFPJTv@fB^t@|@hBzAhD^t@JRsGzCoAj@}BfAiB|@YNkDfBq@^MF]KBXAZGVEFf@jCLp@lAtF^lBb@rCd@`DhD|QKFd@|BPv@DTP|@P|@jAfCR?x@rDBLZpAXpABLrBfIr@vCNp@dApEdBlHVOFXHMLILGLCN@LBLHJLHNFPDZp@KF?|AWV`Ah@pC"]};
     /* ROUTE_DATA_END */
-    function walkingRoute(p) { const route=walking[p.id]; return route?.[0]<=1000 ? route : null; }
-    function routeData(p) { return walkingRoute(p) || driving[p.id]; }
-    function modeText(p) { return walkingRoute(p) ? '步行' : '驾车'; }
-    function distanceText(p) {
-      const meters=routeData(p)?.[0];
-      if (meters==null) return '路线待查';
-      if (meters<50) return '街区内';
-      return meters<1000 ? `${Math.round(meters/50)*50} 米` : `${(meters/1000).toFixed(1)} 公里`;
-    }
-    function durationText(p) {
-      const seconds=routeData(p)?.[1];
-      if (seconds==null) return '';
-      if (seconds===0) return '就在附近';
-      if (p.id==='airport') return '预留 60–90 分钟';
-      const minutes=seconds/60;
-      if (walkingRoute(p)) {
-        const low=Math.max(5,Math.ceil(minutes*1.2/5)*5);
-        const high=Math.max(low+5,Math.ceil(minutes*1.5/5)*5);
-        return `约 ${low}–${high} 分钟`;
-      }
-      const low=Math.max(10,Math.ceil((minutes*1.5+5)/5)*5);
-      const high=Math.max(low+5,Math.ceil((minutes*2.3+10)/5)*5);
-      return `预留 ${low}–${high} 分钟`;
-    }
-    function decodePolyline(encoded) {
-      let index=0, lat=0, lon=0;
-      const points=[];
-      while (index<encoded.length) {
-        const deltas=[];
-        for (let axis=0; axis<2; axis++) {
-          let value=0, shift=0, byte;
-          do { byte=encoded.charCodeAt(index++)-63; value|=(byte&31)<<shift; shift+=5; } while (byte>=32);
-          deltas.push(value&1 ? ~(value>>1) : value>>1);
+    window.createTripMap({
+      home, spots, driving, walking, typeName, typeOrder,
+      missingDistanceText:'路线待查', closeDistanceLabel:'街区内', zeroDurationLabel:'就在附近',
+      airportDuration:'预留 60–90 分钟',
+      formatDuration(minutes,isWalking) {
+        if (isWalking) {
+          const low=Math.max(5,Math.ceil(minutes*1.2/5)*5);
+          const high=Math.max(low+5,Math.ceil(minutes*1.5/5)*5);
+          return `约 ${low}–${high} 分钟`;
         }
-        lat+=deltas[0]; lon+=deltas[1];
-        points.push([lat/1e5,lon/1e5]);
-      }
-      return points;
-    }
-    function amap(p) { return `https://uri.amap.com/search?keyword=${encodeURIComponent(p.search)}&city=${encodeURIComponent('哈尔滨')}`; }
-    function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
-    function renderList() {
-      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (routeData(a)?.[0]??Infinity)-(routeData(b)?.[0]??Infinity));
-      $('count').textContent=`${visible.length} 个地点 · 按类别及路线距离排列`;
-      $('places').replaceChildren();
-      if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
-      visible.forEach(p=>{
-        const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
-        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${modeText(p)} ${distanceText(p)}<br>${durationText(p)} ↗</span>`;
-        b.addEventListener('click',()=>select(p,true)); $('places').append(b);
-      });
-    }
-    function renderDetail() {
-      const p=selected, isHome=p.id==='home';
-      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿基点':`距住处：${modeText(p)} ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.10—01.16':p.tag}</span></div><div class="detail-actions"><a href="${amap(p)}" target="_blank" rel="noopener noreferrer">在高德地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">地点资料 ↗</a></div>`;
-    }
-    function makeIcon(p, active=false) {
-      return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
-    }
-    function select(p, move) {
-      selected=p; renderList(); renderDetail();
-      if (!map) return;
-      updateMarkers();
-      const selectedMarker=markers.get(p.id);
-      if (selectedMarker && !map.hasLayer(selectedMarker)) selectedMarker.addTo(map);
-      markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
-      if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
-      if (p.id!=='home' && routeData(p)?.[2]) {
-        const points=decodePolyline(routeData(p)[2]);
-        routeLayer=L.layerGroup([
-          L.polyline(points,{color:'#fff',weight:9,opacity:.95,interactive:false}),
-          L.polyline(points,{color:'#16a9f5',weight:5,opacity:1,interactive:false})
-        ]).addTo(map);
-      }
-      if (p.id!=='home') {
-        const bottomPadding=Math.min($('detail').offsetHeight+36,Math.floor(map.getSize().y*.62));
-        map.fitBounds(L.latLngBounds([[home.lat,home.lon],[p.lat,p.lon]]),{paddingTopLeft:[28,28],paddingBottomRight:[28,bottomPadding],maxZoom:16});
-      } else if (move) map.flyTo([p.lat,p.lon],15,{duration:.7});
-    }
-    function updateMarkers() {
-      if (!map) return;
-      spots.forEach(p=>{ const m=markers.get(p.id); if (matching(p)) m.addTo(map); else map.removeLayer(m); });
-    }
-    function fitAll() {
-      if (!map) return;
-      const shown=[home,...spots.filter(matching)];
-      map.fitBounds(L.latLngBounds(shown.map(p=>[p.lat,p.lon])).pad(.12),{padding:[24,24],maxZoom:14});
-    }
-    $('search').addEventListener('input',e=>{ query=e.target.value.trim().toLowerCase();renderList();updateMarkers(); });
-    $('filters').addEventListener('click',e=>{
-      const b=e.target.closest('[data-filter]');if(!b)return;
-      filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));
-      renderList();updateMarkers();
+        const low=Math.max(10,Math.ceil((minutes*1.5+5)/5)*5);
+        const high=Math.max(low+5,Math.ceil((minutes*2.3+10)/5)*5);
+        return `预留 ${low}–${high} 分钟`;
+      },
+      navigationUrl:p=>`https://uri.amap.com/search?keyword=${encodeURIComponent(p.search)}&city=${encodeURIComponent('哈尔滨')}`,
+      navigationLabel:'在高德地图查看', sourceLabel:()=> '地点资料',
+      homeMeta:'住宿基点', homeDates:'2027.01.10—01.16',
+      initialZoom:13, nearbyZoom:14, overviewPadding:.12, overviewMaxZoom:14,
+      quickLinks:{airportbtn:'airport'}
     });
-    $('nearby').addEventListener('click',()=>{if(map)map.flyTo([home.lat,home.lon],14,{duration:.7});});
-    $('airportbtn').addEventListener('click',()=>select(spots.find(p=>p.id==='airport'),true));
-    $('overview').addEventListener('click',fitAll);
-    document.querySelector('.days').addEventListener('click',e=>{
-      const button=e.target.closest('.spot-link[data-spot]');
-      if (!button) return;
-      const spot=all.find(p=>p.id===button.dataset.spot);
-      if (!spot) return;
-      select(spot,true);
-      if (window.matchMedia('(max-width:950px)').matches)
-        document.querySelector('.mapwrap').scrollIntoView({behavior:'smooth',block:'start'});
-    });
-    renderList();renderDetail();
-    if (window.L) {
-      map=L.map('map',{zoomControl:false,scrollWheelZoom:true}).setView([home.lat,home.lon],13);
-      // Standard OpenStreetMap tiles need a real page origin (Referer). Opened from a sandboxed
-      // preview or file://, they are refused, so fall back to OpenTopoMap after repeated errors.
-      const osm={url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',opts:{maxZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
-      const topo={url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',opts:{subdomains:'abc',maxZoom:17,attribution:'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
-      const noReferrer=self.origin==='null'||location.protocol==='file:';
-      let tiles, failures=0, usingTopo=false;
-      function useTiles(src){
-        if (tiles) map.removeLayer(tiles);
-        failures=0; tiles=L.tileLayer(src.url,src.opts).addTo(map);
-        tiles.on('tileerror',()=>{
-          if (++failures<3) return;
-          if (!usingTopo) { usingTopo=true; useTiles(topo); } else $('fallback').style.display='block';
-        });
-      }
-      usingTopo=noReferrer; useTiles(noReferrer?topo:osm);
-      L.control.zoom({position:'bottomright'}).addTo(map);
-      all.forEach(p=>{ const m=L.marker([p.lat,p.lon],{icon:makeIcon(p,p.id==='home')}).addTo(map); m.bindTooltip(p.name,{direction:'top',offset:[0,-14]}); m.on('click',()=>select(p,false)); markers.set(p.id,m); });
-      // Keep the initial view useful for the city center; “看全部地点” also includes the distant Volga Manor.
-    } else { $('fallback').style.display='block'; }
   </script>
 </body>
 </html>
