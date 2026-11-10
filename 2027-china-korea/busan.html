@@ -152,7 +152,7 @@
         <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Busan · winter 2027</div>
         <h1>住在海云台，轻松玩釜山</h1>
-        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil。选地点会显示从 LCT 综合体出发的路线：近处按步行，远处按驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap；时间是留有缓冲的规划范围，并非实时路况。</p>
+        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil。选地点会显示从 LCT 综合体出发的路线：步行路线不超过 1 公里时显示步行，更远显示驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap；时间是留有缓冲的规划范围，并非实时路况。</p>
         <div class="tripline"><span>1月5日—8日 · 3晚</span><span>家庭出行</span></div>
         <div class="tripline"><span>✈ 1月5日 11:45 抵达 PUS 国际线</span><span>🚄 1月8日 约14:00 釜山站 KTX</span></div>
         <a class="home" href="https://www.expedia.co.nz/Busan-Hotels-Grand-LCT-Residence.h54096001.Hotel-Information" target="_blank" rel="noopener noreferrer">
@@ -305,7 +305,7 @@
       "kakao-busan-station":[16225,1106,"sfruEciksW_BoEoFnD{@tWjNvRlK|cAcN`s@uNnQeCvLfZ`oAfAhV`zAjdA`VbVp[|y@pCd]|]s@h^dSrHhJ~J~d@hIAtEpDwPzMiSd_A{ZxKrAfp@nOdP`BlTrEtKlj@vSdQ`Q"],
       "yuhaeng-tongsin":[17713,1231,"sfruEciksW_BoEoFnD{@tWjNvRlK|cAcN`s@cP~ScAnPrYxhAfAhV`zAjdApUnU`\\pz@|BfRrBxhAfEdSyR`i@qAls@jO~L~Axd@rGdNfo@xo@vrB|y@lUQSpn@~N`@T}B"]
     };
-    // Short local trips use the OSRM foot profile; values are [meters, seconds, encoded polyline].
+    // Foot routes use the OSRM foot profile; only routes up to 1 km are shown as walking.
     const walking = {
       "haeundaestn":[1427,1144,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@oC~BFNyBdBfCvGiHfNKUSLpC|G"],
       "beach":[1435,1148,"sfruEciksWe@wBk@{@dCyBrBlA`@v@}@pGYlVt@jL^\\Ol@nCdUt@lD"],
@@ -324,8 +324,9 @@
       "shop-almond":[1598,1281,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@kI~GXdBIDUhBiBd@e@`@}@AEVaA`AdA|BuB|ArBnEcDrCjA`C"],
       "artbox-haeundae":[1410,1128,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDY~S?lAt@jL[NCd@sC`C?LgHzFDLaCpB"]
     };
-    function routeData(p) { return walking[p.id] || driving[p.id]; }
-    function modeText(p) { return walking[p.id] ? '步行' : '驾车'; }
+    function walkingRoute(p) { const route=walking[p.id]; return route?.[0]<=1000 ? route : null; }
+    function routeData(p) { return walkingRoute(p) || driving[p.id]; }
+    function modeText(p) { return walkingRoute(p) ? '步行' : '驾车'; }
     function distanceText(p) {
       const meters=routeData(p)?.[0];
       if (meters==null) return '车程待查';
@@ -336,7 +337,7 @@
       if (seconds==null) return '';
       if (p.id==='airport') return '预留 60–80 分钟';
       const minutes=seconds/60;
-      if (walking[p.id]) {
+      if (walkingRoute(p)) {
         const low=Math.max(5,Math.ceil(minutes/5)*5);
         const high=Math.max(low+5,Math.ceil(minutes*1.25/5)*5);
         return `约 ${low}–${high} 分钟`;
