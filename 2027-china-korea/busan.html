@@ -386,7 +386,11 @@
       markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
       if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
       if (p.id!=='home' && routeData(p)?.[2]) {
-        routeLayer=L.polyline(decodePolyline(routeData(p)[2]),{color:walking[p.id]?'#30a9a0':'#e6a550',weight:5,opacity:.95}).addTo(map);
+        const points=decodePolyline(routeData(p)[2]);
+        routeLayer=L.layerGroup([
+          L.polyline(points,{color:'#fff',weight:9,opacity:.95,interactive:false}),
+          L.polyline(points,{color:'#16a9f5',weight:5,opacity:1,interactive:false})
+        ]).addTo(map);
       }
       if (p.id!=='home') {
         const bottomPadding=Math.min($('detail').offsetHeight+36,Math.floor(map.getSize().y*.62));
