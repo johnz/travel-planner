@@ -152,7 +152,7 @@
         <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Busan · winter 2027</div>
         <h1>住在海云台，轻松玩釜山</h1>
-        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil；具体前台入口以订单指引为准。</p>
+        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil。驾车距离与时间从 LCT 综合体估算；不含实时路况和等车时间，附近小店步行更合适。道路数据：<a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap。</p>
         <div class="tripline"><span>1月5日—8日 · 3晚</span><span>家庭出行</span></div>
         <div class="tripline"><span>✈ 1月5日 11:45 抵达 PUS 国际线</span><span>🚄 1月8日 约14:00 釜山站 KTX</span></div>
         <a class="home" href="https://www.expedia.co.nz/Busan-Hotels-Grand-LCT-Residence.h54096001.Hotel-Information" target="_blank" rel="noopener noreferrer">
@@ -252,30 +252,58 @@
     const typeName = {home:'已订住宿',sight:'景点与体验',food:'吃东西',transport:'机场车站',street:'逛街文化',shop:'创意小物'};
     const typeOrder = {transport:0,sight:1,street:2,shop:3,food:4};
     const $ = id => document.getElementById(id);
-    let filter = 'all', query = '', selected = home, map, markers = new Map(), route;
-
-    function km(a,b) {
-      const r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
-      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
-      return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    let filter = 'all', query = '', selected = home, map, markers = new Map();
+    // OSRM driving table from the LCT complex, fetched 2026-11-10. Values are [meters, seconds].
+    // These model times exclude live traffic, pick-up, parking and walks to the actual entrances.
+    const driving = {
+      'airport':[27030,1728], 'busanstn':[16260,1138], 'haeundaestn':[1850,175],
+      'beach':[1624,182], 'mipo':[628,113], 'cheongsapo':[2493,274],
+      'sealife':[1140,128], 'gwangalli':[6097,470], 'lotte':[7670,684],
+      'yonggungsa':[7974,653], 'market':[1239,189], 'haeridan':[2100,234],
+      'working-holiday':[939,115], 'gaemijip':[1511,240], 'biff-hotteok':[17790,1222],
+      'haeundae-hotteok':[1209,184], 'bonjeon-gukbap':[15082,1094],
+      'miryang-gukbap':[1451,218], 'gamcheon':[23120,1465], 'jagalchi':[20974,1300],
+      'bay101':[2153,227], 'mipojip':[484,110], 'mipo-kkeutjip':[628,113],
+      'gijang-kkeutjip':[14541,1070], 'gijang-market':[12061,866],
+      'jeonpo-cafe-street':[12465,936], 'f1963':[7482,638],
+      'millak-the-market':[5285,429], 'gwangbokro-biff':[17706,1208],
+      'gukje-market':[17586,1220], 'bosu-book-street':[17463,1204],
+      'huinnyeoul':[20177,1187], 'choryang-168':[15787,1163],
+      'shanghai-street':[15271,1063], 'shinsegae-centum':[4588,373],
+      'lotte-outlet-dongbusan':[6534,506], 'hippymond-living':[2014,218],
+      'pretty-whale':[1963,208], 'shop-almond':[1982,210],
+      'artbox-haeundae':[2038,221], 'object-seomyeon':[12316,909],
+      'addd-jeonpo':[12303,905], 'things-of-note-jeonpo':[12584,926],
+      'gyutori':[12352,905], 'addd-haus-gwangalli':[5602,434],
+      'kakao-centum':[4708,384], 'kakao-busan-station':[16225,1106],
+      'yuhaeng-tongsin':[17713,1231]
+    };
+    function distanceText(p) {
+      const meters=driving[p.id]?.[0];
+      if (meters==null) return '车程待查';
+      return meters<1000 ? `${Math.round(meters/50)*50} 米` : `${(meters/1000).toFixed(1)} 公里`;
     }
-    function distanceText(p) { const d=km(home,p); return d<1 ? `${Math.round(d*1000/50)*50} 米` : `${d.toFixed(1)} 公里`; }
+    function durationText(p) {
+      const seconds=driving[p.id]?.[1];
+      if (seconds==null) return '';
+      return `约 ${Math.max(5,Math.ceil(seconds/300)*5)} 分钟`;
+    }
     function naver(p) { return `https://map.naver.com/p/search/${encodeURIComponent(p.search)}`; }
     function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
     function renderList() {
-      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || km(home,a)-km(home,b));
-      $('count').textContent=`${visible.length} 个地点 · 按类别及距离排列`;
+      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (driving[a.id]?.[0]??Infinity)-(driving[b.id]?.[0]??Infinity));
+      $('count').textContent=`${visible.length} 个地点 · 按类别及驾车距离排列`;
       $('places').replaceChildren();
       if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
       visible.forEach(p=>{
         const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
-        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)} ↗</span>`;
+        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)}<br>${durationText(p)} ↗</span>`;
         b.addEventListener('click',()=>select(p,true)); $('places').append(b);
       });
     }
     function renderDetail() {
       const p=selected, isHome=p.id==='home';
-      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿位置':`距住处直线约 ${distanceText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${isHome?'住宿资料':'地点资料'} ↗</a></div>`;
+      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿位置':`距住处驾车约 ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${isHome?'住宿资料':'地点资料'} ↗</a></div>`;
     }
     function makeIcon(p, active=false) {
       return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
@@ -284,8 +312,6 @@
       selected=p; renderList(); renderDetail();
       if (!map) return;
       markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
-      if (route) map.removeLayer(route);
-      if (p.id!=='home') route=L.polyline([[home.lat,home.lon],[p.lat,p.lon]],{color:'#e6a550',weight:3,dashArray:'6 7',opacity:.9}).addTo(map);
       if (move) map.flyTo([p.lat,p.lon],p.id==='home'?15:Math.max(map.getZoom(),13),{duration:.7});
     }
     function updateMarkers() {
