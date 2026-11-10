@@ -152,7 +152,7 @@
         <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Busan · winter 2027</div>
         <h1>住在海云台，轻松玩釜山</h1>
-        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil。选地点会显示从 LCT 综合体出发的驾车路线。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap；时间是加了交通缓冲的规划范围，并非实时路况。附近小店步行更合适。</p>
+        <p class="sub">已订海云台 LCT 综合体的住宿。酒店地址：30 Dalmaji-gil。选地点会显示从 LCT 综合体出发的路线：近处按步行，远处按驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap；时间是留有缓冲的规划范围，并非实时路况。</p>
         <div class="tripline"><span>1月5日—8日 · 3晚</span><span>家庭出行</span></div>
         <div class="tripline"><span>✈ 1月5日 11:45 抵达 PUS 国际线</span><span>🚄 1月8日 约14:00 釜山站 KTX</span></div>
         <a class="home" href="https://www.expedia.co.nz/Busan-Hotels-Grand-LCT-Residence.h54096001.Hotel-Information" target="_blank" rel="noopener noreferrer">
@@ -305,16 +305,42 @@
       "kakao-busan-station":[16225,1106,"sfruEciksW_BoEoFnD{@tWjNvRlK|cAcN`s@uNnQeCvLfZ`oAfAhV`zAjdA`VbVp[|y@pCd]|]s@h^dSrHhJ~J~d@hIAtEpDwPzMiSd_A{ZxKrAfp@nOdP`BlTrEtKlj@vSdQ`Q"],
       "yuhaeng-tongsin":[17713,1231,"sfruEciksW_BoEoFnD{@tWjNvRlK|cAcN`s@cP~ScAnPrYxhAfAhV`zAjdApUnU`\\pz@|BfRrBxhAfEdSyR`i@qAls@jO~L~Axd@rGdNfo@xo@vrB|y@lUQSpn@~N`@T}B"]
     };
+    // Short local trips use the OSRM foot profile; values are [meters, seconds, encoded polyline].
+    const walking = {
+      "haeundaestn":[1427,1144,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@oC~BFNyBdBfCvGiHfNKUSLpC|G"],
+      "beach":[1435,1148,"sfruEciksWe@wBk@{@dCyBrBlA`@v@}@pGYlVt@jL^\\Ol@nCdUt@lD"],
+      "mipo":[521,417,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSYMT]GEhIgJNFh@u@"],
+      "sealife":[1124,899,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDGvBQtRt@jLRFJTAXMRl@`F"],
+      "market":[862,690,"sfruEciksWDIk@mBOG[s@gAt@I^KH]@e@h@a@Be@XCFSFg@zL?r@ZxCAh@i@z@_CpBfBjFCb@DA"],
+      "haeridan":[1860,1488,"sfruEciksWe@wBk@{@dCyBrBlA`@v@}@pGY~St@xN[NCd@sC`C?L_RzOQRZz@m@JGKeAx@KSwDfCOY[Vm@B"],
+      "working-holiday":[957,766,"sfruEciksWDIk@mBOG[s@gAt@I^KH]@e@h@a@Be@XCFSFg@zLrBXz@\\z@nABX^ZFhDIjFIbA|ApB"],
+      "gaemijip":[1314,1051,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDY~S?lAt@jL[NCd@sC`C?LgH|F"],
+      "haeundae-hotteok":[885,708,"sfruEciksWDIk@mBOG[s@gAt@I^KH]@e@h@a@Be@XCFSFg@zL?r@ZxCAh@i@z@_CpBfBjFCb@]l@"],
+      "miryang-gukbap":[1378,1102,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDY~S?lAt@jL[NCd@sC`C?LgHzFDLWT^v@NM"],
+      "mipojip":[317,254,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSYMT]GEDGIG`BiB"],
+      "mipo-kkeutjip":[533,426,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSYMT]GEhIgJNFv@gA"],
+      "hippymond-living":[1769,1415,"sfruEciksWe@wBk@{@dCyBrBlA`@v@}@pGY~St@xN[NCd@sC`C?L_RzOQRZz@m@JGKeAx@KSiBfAQi@"],
+      "pretty-whale":[1579,1266,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@kI~GXdBIDUhBiBd@e@`@}@AEVaA`AdA|BuB|ArBnEcDrCv@~A"],
+      "shop-almond":[1598,1281,"sfruEciksWe@wBk@{@gAt@Uh@]@e@h@a@B}@h@g@zLXvFi@z@kI~GXdBIDUhBiBd@e@`@}@AEVaA`AdA|BuB|ArBnEcDrCjA`C"],
+      "artbox-haeundae":[1410,1128,"sfruEciksWDIk@mBOG[s@`@_@VGf@c@JYVSrBlAJ\\TXKRQlA_@nDY~S?lAt@jL[NCd@sC`C?LgHzFDLaCpB"]
+    };
+    function routeData(p) { return walking[p.id] || driving[p.id]; }
+    function modeText(p) { return walking[p.id] ? '步行' : '驾车'; }
     function distanceText(p) {
-      const meters=driving[p.id]?.[0];
+      const meters=routeData(p)?.[0];
       if (meters==null) return '车程待查';
       return meters<1000 ? `${Math.round(meters/50)*50} 米` : `${(meters/1000).toFixed(1)} 公里`;
     }
     function durationText(p) {
-      const seconds=driving[p.id]?.[1];
+      const seconds=routeData(p)?.[1];
       if (seconds==null) return '';
       if (p.id==='airport') return '预留 60–80 分钟';
       const minutes=seconds/60;
+      if (walking[p.id]) {
+        const low=Math.max(5,Math.ceil(minutes/5)*5);
+        const high=Math.max(low+5,Math.ceil(minutes*1.25/5)*5);
+        return `约 ${low}–${high} 分钟`;
+      }
       const low=Math.max(5,Math.ceil((minutes*1.5+5)/5)*5);
       const high=Math.max(low+5,Math.ceil((minutes*2.1+10)/5)*5);
       return `预留 ${low}–${high} 分钟`;
@@ -337,19 +363,19 @@
     function naver(p) { return `https://map.naver.com/p/search/${encodeURIComponent(p.search)}`; }
     function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
     function renderList() {
-      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (driving[a.id]?.[0]??Infinity)-(driving[b.id]?.[0]??Infinity));
-      $('count').textContent=`${visible.length} 个地点 · 按类别及驾车距离排列`;
+      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (routeData(a)?.[0]??Infinity)-(routeData(b)?.[0]??Infinity));
+      $('count').textContent=`${visible.length} 个地点 · 按类别及路线距离排列`;
       $('places').replaceChildren();
       if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
       visible.forEach(p=>{
         const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
-        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)}<br>${durationText(p)} ↗</span>`;
+        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${modeText(p)} ${distanceText(p)}<br>${durationText(p)} ↗</span>`;
         b.addEventListener('click',()=>select(p,true)); $('places').append(b);
       });
     }
     function renderDetail() {
       const p=selected, isHome=p.id==='home';
-      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿位置':`距住处驾车约 ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${isHome?'住宿资料':'地点资料'} ↗</a></div>`;
+      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿位置':`距住处：${modeText(p)} ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.05—01.08':p.tag}</span></div><div class="detail-actions"><a href="${naver(p)}" target="_blank" rel="noopener noreferrer">在 Naver 地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">${isHome?'住宿资料':'地点资料'} ↗</a></div>`;
     }
     function makeIcon(p, active=false) {
       return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
@@ -359,8 +385,8 @@
       if (!map) return;
       markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
       if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
-      if (p.id!=='home' && driving[p.id]?.[2]) {
-        routeLayer=L.polyline(decodePolyline(driving[p.id][2]),{color:'#e6a550',weight:5,opacity:.95}).addTo(map);
+      if (p.id!=='home' && routeData(p)?.[2]) {
+        routeLayer=L.polyline(decodePolyline(routeData(p)[2]),{color:walking[p.id]?'#30a9a0':'#e6a550',weight:5,opacity:.95}).addTo(map);
         map.fitBounds(routeLayer.getBounds(),{paddingTopLeft:[24,24],paddingBottomRight:[24,140],maxZoom:15});
       } else if (move) map.flyTo([p.lat,p.lon],15,{duration:.7});
     }
