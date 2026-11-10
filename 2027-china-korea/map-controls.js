@@ -20,6 +20,49 @@
     return points;
   }
 
+  // Base map with Chinese place names. OpenFreeMap vector tiles carry name:zh in the data;
+  // we rewrite the style's label expressions to prefer Chinese, then English, and never show
+  // Korean-only labels. Anything going wrong falls back to the plain raster tiles below.
+  const MAPLIBRE_CSS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css';
+  const MAPLIBRE_JS = 'https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js';
+  const MAPLIBRE_LEAFLET_JS = 'https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js';
+  const CHINESE_STYLE = 'https://tiles.openfreemap.org/styles/liberty';
+  const CHINESE_NAME = ['coalesce', ['get', 'name:zh-Hans'], ['get', 'name:zh'], ['get', 'name:zh-Hant'], ['get', 'name_en']];
+
+  function loadScript(src) {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = resolve;
+      script.onerror = () => reject(new Error('script failed: ' + src));
+      document.head.append(script);
+    });
+  }
+  function loadStyles(href) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = href;
+    document.head.append(link);
+  }
+  async function createChineseVectorLayer() {
+    loadStyles(MAPLIBRE_CSS);
+    await loadScript(MAPLIBRE_JS);
+    await loadScript(MAPLIBRE_LEAFLET_JS);
+    if (!window.maplibregl || !L.maplibreGL) throw new Error('maplibre unavailable');
+    const response = await fetch(CHINESE_STYLE);
+    if (!response.ok) throw new Error('style http ' + response.status);
+    const style = await response.json();
+    style.layers = style.layers.filter(layer => layer.id !== 'building-3d');
+    style.layers.forEach(layer => {
+      const field = layer.layout && layer.layout['text-field'];
+      if (field && JSON.stringify(field).includes('name')) layer.layout['text-field'] = CHINESE_NAME;
+    });
+    return L.maplibreGL({
+      style,
+      attribution: '© <a href="https://openfreemap.org" target="_blank" rel="noopener noreferrer">OpenFreeMap</a> © <a href="https://www.openmaptiles.org/" target="_blank" rel="noopener noreferrer">OpenMapTiles</a> data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>'
+    });
+  }
+
   window.createTripMap = function (config) {
     const {home, spots, driving, walking, typeName, typeOrder} = config;
     const all = [home, ...spots];
@@ -168,7 +211,7 @@
       const osm = {url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png', opts: {maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
       const topo = {url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', opts: {subdomains: 'abc', maxZoom: 17, attribution: 'Map © <a href="https://opentopomap.org/" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC BY-SA); data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors'}};
       const noReferrer = self.origin === 'null' || location.protocol === 'file:';
-      let tiles, failures = 0, usingTopo = noReferrer;
+      let tiles, failures = 0, usingTopo = noReferrer, vectorLayer, vectorFailed = false, rasterTimer;
       function useTiles(source) {
         if (tiles) map.removeLayer(tiles);
         failures = 0;
@@ -181,7 +224,40 @@
           } else $('fallback').style.display = 'block';
         });
       }
-      useTiles(noReferrer ? topo : osm);
+      function startRaster() {
+        clearTimeout(rasterTimer);
+        if (!tiles && !vectorLayer) useTiles(noReferrer ? topo : osm);
+      }
+      // Show plain raster tiles if the Chinese-labelled vector map is not ready within 4 s.
+      rasterTimer = setTimeout(startRaster, 4000);
+      createChineseVectorLayer().then(layer => {
+        if (vectorFailed) return;
+        clearTimeout(rasterTimer);
+        try {
+          layer.addTo(map);
+        } catch (error) {
+          vectorFailed = true;
+          try { map.removeLayer(layer); } catch (_) {}
+          startRaster();
+          return;
+        }
+        vectorLayer = layer;
+        if (tiles) { map.removeLayer(tiles); tiles = undefined; }
+        map.setMaxZoom(19);
+        let loaded = false;
+        const glMap = layer.getMaplibreMap();
+        glMap.on('load', () => { loaded = true; });
+        glMap.on('error', () => {
+          if (loaded || vectorFailed) return;
+          vectorFailed = true;
+          map.removeLayer(layer);
+          vectorLayer = undefined;
+          startRaster();
+        });
+      }).catch(() => {
+        vectorFailed = true;
+        startRaster();
+      });
       L.control.zoom({position: 'bottomright'}).addTo(map);
       all.forEach(p => {
         const marker = L.marker([p.lat, p.lon], {icon: makeIcon(p, p.id === 'home')}).addTo(map);
