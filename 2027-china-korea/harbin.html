@@ -151,11 +151,11 @@
         <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Harbin · winter 2027</div>
         <h1>住在猫本民宿，慢慢逛哈尔滨</h1>
-        <p class="sub">以「猫本民宿」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。选地点可查看从老道外街区中心估算的路线；近处按步行，远处按驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap，时间留有冬季交通缓冲，并非实时路况。江面、步行街与景区以开放入口为准。</p>
+        <p class="sub">以「猫本民宿」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。选地点可查看从猫本民宿所在小区附近估算的路线；近处按步行，远处按驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap，时间留有冬季交通缓冲，并非实时路况。江面、步行街与景区以开放入口为准。</p>
         <div class="tripline"><span>1月10日—16日 · 6晚</span><span>家庭出行</span></div>
         <div class="tripline"><span>✈ 1月10日 13:35 抵达 HRB T2</span><span>✈ 1月16日 18:05 离开 HRB</span></div>
-        <a class="home" href="https://www.openstreetmap.org/search?query=Daowai%20Harbin" target="_blank" rel="noopener noreferrer">
-          <span class="homeicon">⌂</span><span><strong>猫本民宿</strong><small>老道外街区 · 住处位置仅作区域参考</small></span><span class="home-arrow">↗</span>
+        <a class="home" href="https://www.openstreetmap.org/?mlat=45.779374&mlon=126.625458#map=17/45.779374/126.625458" target="_blank" rel="noopener noreferrer">
+          <span class="homeicon">⌂</span><span><strong>猫本民宿</strong><small>北马路站 4 号出口附近 · 图钉为小区位置</small></span><span class="home-arrow">↗</span>
         </a>
       </header>
       <details class="itinerary" open>
@@ -234,9 +234,9 @@
   <script>
     // Coordinates are WGS84 for OpenStreetMap. The homestay pin marks its residential complex,
     // not the exact entrance to the booked apartment. Other pins mark POIs or district centers.
-    const home = { id:'home', name:'猫本民宿', type:'home', icon:'⌂', lat:45.779850, lon:126.634759,
-      area:'老道外 · 道外区', blurb:'住宿标记只表示老道外街区，并非具体地址。',
-      source:'https://www.openstreetmap.org/search?query=Daowai%20Harbin', search:'中华巴洛克历史文化街区 哈尔滨' };
+    const home = { id:'home', name:'猫本民宿', type:'home', icon:'⌂', lat:45.779374, lon:126.625458,
+      area:'宝宇天邑澜湾 · 道外区', blurb:'导航搜索「猫本民宿」；地铁 3 号线北马路站 4 号出口步行约 2 分钟。图钉标在民宿所在小区附近，准确楼栋和入口以房东入住指引为准。',
+      source:'https://www.openstreetmap.org/?mlat=45.779374&mlon=126.625458#map=17/45.779374/126.625458', search:'猫本民宿 北马路站4号出口 哈尔滨' };
     const spots = [
       {id:'airport',name:'哈尔滨太平国际机场 · T2',type:'transport',icon:'✈',lat:45.621344,lon:126.240029,area:'道里区太平镇 · HRB',blurb:'1 月 10 日抵达航班 从首尔仁川出发，哈尔滨当地时间 13:35 抵达 T2。1 月 16 日返程航班 于 18:05 从哈尔滨飞上海；约 13:30 从市区出发，出发前核对返程航站楼。图钉为 T2 航站楼附近。',tag:'1/10 抵达 · 1/16 返程',source:'https://ditu.amap.com/place/B0FFJ3IFW7',search:'哈尔滨太平国际机场 T2航站楼'},
       {id:'baroque',name:'中华巴洛克历史文化街区',type:'sight',icon:'🏛',lat:45.779850,lon:126.634759,area:'老道外',blurb:'中西合璧的老街建筑，适合边走边吃。图钉落在街区中心附近；从猫本民宿出发可先逛这里。',tag:'老街 · 近住处',source:'https://ditu.amap.com/place/B0FFFX17PB',search:'中华巴洛克历史文化街区 哈尔滨'},
@@ -275,9 +275,56 @@
     const $ = id => document.getElementById(id);
     let filter = 'all', query = '', selected = home, map, markers = new Map(), routeLayer;
     /* ROUTE_DATA_START */
-    // Public route origin is the approximate Old Daowai district marker.
-    const driving = {"airport":[38466,1749,"kclvGuq|cWhGlRxj@qWxb@~gCjyD~`Dv{DljGtlFptVt{BhgTwOtnBhHbhCfq@rpCrqAfbBlSgF"],"baroque":[0,0,""],"central":[3110,173,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@|VaFb@bAxArP"],"sophia":[2548,149,"kclvGuq|cWhGlRxj@qWhMtg@fCzNxD|YsIrCr@tF"],"flood":[2944,188,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA~A~XsMhC}BlApFhU`@H"],"rivercarnival":[2896,184,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpMbFp@pBrAlWsMhC}BlAxEjS"],"railbridge":[12918,1164,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@jFSlA|B[zCkBZgAyAP_DbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@sAlAa_@}hAbDmAtCyKsIih@"],"zhaolin":[3065,176,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@|VaFuJxA"],"ice":[10656,566,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@jFSnA|C]zBuBTcAsBV_CbBk@lArByBlI_qBvvCiK_WcABAjAdAv@zPna@U`CyNdV`OgU"],"tiger":[14549,767,"kclvGuq|cWbGvQqb@jSsTs`AsMi[_Q_{@zSsOqeBv_A}pBz~@cbAtFgSvHvaAlsD`Rh~@`]|x@rIk[rRy^"],"theatre":[13082,690,"kclvGuq|cWbGvQqb@jSsTs`AsMi[_Q_{@zSsOqeBv_AitB|`Ap@hAvRgJtIdf@ji@zrBjPnUhAlL|J}D|AbTiCjjBiJzL"],"bath":[9918,495,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@vNr^`bAjz@pKxXtDjD`EWro@mc@vr@re@hg@l~@`Cf{@mH`C"],"guandong":[10037,509,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@vNr^`bAjz@pKxXfEtDbu@od@xq@xd@|g@h~@nCl}@SwS"],"binguo":[4138,218,"kclvGuq|cWhGlRxj@qWhMtg@~BzMlHpj@dDn]~@bEzUdPwEl]aIhW"],"sun":[11959,845,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@lGBf@fEkApA{ASi@aBV_CbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@mUrSaEcKyLpKsAo@"],"polar":[9626,529,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@lGBj@hD[vA_CPy@oBV_CbBk@lArByBlIuxA|uB{]gq@mLmYgD|CaCg@ByA"],"hayao":[6957,397,"kclvGuq|cWhGlRvAm@r[{cAvAi@RiEpIsYta@{{@rLgLDoF_YenEe@mWdAuAl[wFh@pIyDp@"],"volga":[28295,1685,"kclvGuq|cW`J~Ppi@cfBpq@_nA|wBtHpL`Tdh@en@v~@sXwg@o}Dpp@wzIfo@ieFnf@rPzCsl@|l@o~DrQki@zB{{@|R}sA|r@umAd_Aix@xf@ecA{DcV"],"songsong":[9422,494,"kclvGuq|cWhGlRvAm@j^eeAdJ}_@ta@{{@bKkIvBwF|wBtHdNjUz`DbpBuUqP"],"market":[2269,157,"kclvGuq|cWhGlR|YiN`Lbr@xH|n@dH{B"],"hongjiang":[880,58,"kclvGuq|cWdBzE|CzJkPzHoHeP"],"laodingfeng":[923,61,"kclvGuq|cWdBzE|CzJkPzHqGgNcA_D"],"laochujia":[3220,199,"kclvGuq|cWbGvQic@xS`Hb]vAzFzBxDfC~AvJhDdAtA|Bld@h_@mHdA`P"],"madierice":[3243,203,"kclvGuq|cWbGvQic@xS`Hb]vAzFzBxDfC~AvJhDdAtA|Bld@h_@mHlA|Q"],"shanhetun":[2612,174,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@dAQj@jK"],"springpancake":[2461,154,"kclvGuq|cWbGvQic@xS`J`c@pAfDzAhBlBdAbGpBpOkHvAzQmC`@"],"russiandine":[1482,143,"kclvGuq|cWrDrKhB`Hp@t@eAb@|@fF{@lCcBlCfAhIxHfBdCdNfD|X"],"madierdine":[3182,186,"kclvGuq|cWbGvQic@xS`J`c@pAfDzAhBdNnFdAtA|Bld@~b@qId@xG"],"parkson":[2731,139,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA`Ezw@l@dD"],"jinan":[3366,201,"kclvGuq|cWbGvQic@xSxJ~d@tCrEdNnFdAtA|Bld@hj@uKv@xK"]};
-    const walking = {"baroque":[0,0,""],"hongjiang":[328,262,"yjlvGoj|cWOe@cGrIcA}BfAyA"],"laodingfeng":[337,270,"yjlvGoj|cWOe@cGrIsA}Cg@iB"],"russiandine":[1612,1290,"yjlvGoj|cWrClIlG_DhB`Hp@t@eAb@|@fF{@lCcBlCfAhIxHfBdCdNfD|X"]};
+    // Road routes are calculated from the private lodging pin. Values: [meters, seconds, encoded polyline].
+    const driving = {
+      "airport":[37890,1756,"}_lvGutzcWfCvN|L{E|Jzu@lp@mM|CpTjyD~`Dv{DljGtlFptVt{BhgTwOtnBhHbhCfq@rpCrqAfbBlSgF"],
+      "baroque":[2600,174,"}_lvGutzcWbCfNoPpF{AoAkBuDgJoc@eKw`@xFiErD}DrG_GzHuDzDzLd@jDRh@"],
+      "central":[1449,108,"}_lvGutzcWfCvN|L{EtIjs@Hf@`AjBxArP"],
+      "sophia":[1664,137,"}_lvGutzcWfCvN|L{EbBnN`e@mOtCvT"],
+      "flood":[2152,176,"}_lvGutzcWfCvN|L{Ef@fEaWdLtD`Bd@~@~A~XsMhC}BlApFhU`@H"],
+      "rivercarnival":[2104,172,"}_lvGutzcWfCvN|L{Ef@fEaWdLtD`Bd@~@~A~XsMhC}BlAxEjS"],
+      "railbridge":[12125,1153,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@`D`JtIpSdIhIzw@`p@jFSlA|B[zCkBZgAyAP_DbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@sAlAa_@}hAbDmAtCyKsIih@"],
+      "zhaolin":[1385,108,"}_lvGutzcWfCvNrBq@hIiDtIjs@Hf@NTgJjB"],
+      "ice":[9863,554,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@`D`JhKtUl`Afx@jFSnA|C]zBuBTcAsBV_CbBk@lArByBlI_qBvvCiK_WcABAjAdAv@zPna@U`CyNdV`OgU"],
+      "tiger":[14772,780,"}_lvGutzcWbCfNoPpFcD}D_a@kgBsMi[_Q_{@zSsOqeBv_A}pBz~@cbAtFgSvHvaAlsD`Rh~@`]|x@rIk[rRy^"],
+      "theatre":[13305,702,"}_lvGutzcWbCfNoPpFcD}D_a@kgBsMi[_Q_{@zSsOqeBv_AitB|`Ap@hAvRgJtIdf@ji@zrBjPnUhAlL|J}D|AbTiCjjBiJzL"],
+      "bath":[9125,483,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@vNr^`bAjz@pKxXtDjD`EWro@mc@vr@re@hg@l~@`Cf{@mH`C"],
+      "guandong":[9244,497,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@zOd`@|`Axx@pKxXfEtDbu@od@xq@xd@|g@h~@nCl}@SwS"],
+      "binguo":[3562,225,"}_lvGutzcWfCvN|L{EtIjs@f@nAlp@mM`AdMzAjF~T|NwEl]aIhW"],
+      "sun":[11166,834,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@`D`JhKtUl`Afx@lGBf@fEkApA{ASi@aBV_CbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@mUrSaEcKyLpKsAo@"],
+      "polar":[8833,518,"}_lvGutzcWfCvN|L{Ef@fEaWdLzE`D`Ezw@jNdt@`D`JhKtUl`Afx@lGBj@hD[vA_CPy@oBV_CbBk@lArByBlIuxA|uB{]gq@mLmYgD|CaCg@ByA"],
+      "hayao":[7803,457,"}_lvGutzcWtCrNaLsp@~N_Hr[{cAvAi@RiEpIsYta@{{@rLgLDoF_YenEe@mWdAuAl[wFh@pIyDp@"],
+      "volga":[29141,1745,"}_lvGutzcWtCrNaLsp@~N_Hpi@cfBpq@_nA|wBtHpL`Tdh@en@|~@aY}g@a}Dpp@wzIfo@ieFnf@rPzCsl@|l@o~DrQki@zB{{@|R}sA|r@umAd_Aix@xf@ecA{DcV"],
+      "songsong":[10268,554,"}_lvGutzcWtCrNaLsp@~N_Hj^eeAdJ}_@ta@{{@bKkIvBwF|wBtHdNjUz`DbpBuUqP"],
+      "market":[1735,132,"}_lvGutzcWfCvN|L{EfHdl@lc@wN"],
+      "hongjiang":[1646,115,"}_lvGutzcWbCfNoPpF{AoAkBuD{Kih@~KuPuAeD"],
+      "laodingfeng":[1689,118,"}_lvGutzcWbCfNoPpF{AoAkBuD{Kih@~KuPsA}Cg@iB"],
+      "laochujia":[1559,136,"}_lvGutzcWfCvN|L{E~Irt@\\f@jGkAdA`P"],
+      "madierice":[1583,140,"}_lvGutzcWfCvN|L{E~Irt@\\f@jGkAlA|Q"],
+      "shanhetun":[1819,162,"}_lvGutzcWfCvN|L{Ef@fEaWdLtD`Bd@~@~A~X\\lJdAQj@jK"],
+      "springpancake":[1082,88,"}_lvGutzcWfCvNrBq@hIiD|Dj\\kGDmC`@"],
+      "russiandine":[802,66,"}_lvGutzcWfCvNrBq@hIiDbDlX"],
+      "madierdine":[1521,123,"}_lvGutzcWfCvN|L{E~Irt@\\f@`KoBd@xG"],
+      "parkson":[1938,128,"}_lvGutzcWfCvN|L{Ef@fEaWdLtD`Bd@~@Jp@tDhv@l@dD"],
+      "jinan":[1705,138,"}_lvGutzcWfCvN|L{EtIjs@X|@LPjRsDv@xK"]
+    };
+    const walking = {
+      "baroque":[883,707,"}_lvGutzcWeHo`@cBv@k@iAdDgEIQpAoAsCmI"],
+      "central":[1459,1168,"}_lvGutzcWbCfNJCDNnLwEtIjs@Hf@`AjBxAxPMB"],
+      "sophia":[1663,1331,"}_lvGutzcWtCrNnLwEbBnNfNqEbB`MfUsHVXj@rE"],
+      "railbridge":[1982,1586,"}_lvGutzcWbCfN`MkEf@fEoY|LeCa@aF|B@~@ab@tR"],
+      "zhaolin":[1246,997,"}_lvGutzcWbCfNJCDNdBm@hIiD~G`k@i@TIIQHKNo@R[VkAb@u@FOaA"],
+      "market":[1725,1380,"}_lvGutzcWtCrNnLwEbBnNfNqEdEh[bTyF"],
+      "hongjiang":[825,660,"}_lvGutzcWeHo`@cBv@k@iA}FgMfAyA"],
+      "laodingfeng":[835,668,"}_lvGutzcWeHo`@cBv@}G{NcA_D"],
+      "laochujia":[1603,1283,"}_lvGutzcWbCfNJCDNnLwEfHdl@jH_ClBvXUFJpA"],
+      "madierice":[1628,1303,"}_lvGutzcWbCfNJCDNnLwEfHdl@jH_ClBvXTITpC"],
+      "shanhetun":[1656,1325,"}_lvGutzcWbCfNJCDNnLwE~G`k@aCx@g@dDaAxBGz@Dd@qFhAZfF{B`@PdD"],
+      "springpancake":[1338,1071,"}_lvGutzcWbCfNJCDNdBm@hIiD~G`k@i@TIIQHe@s@OEm@P]g@SOc@IkBDMg@yAV"],
+      "russiandine":[802,642,"}_lvGutzcWbCfNJCDNdBm@hIiDbDlX"],
+      "madierdine":[1562,1250,"}_lvGutzcWbCfNJCDNnLwE~G`k@~KuDdBxT"],
+      "jinan":[1875,1501,"}_lvGutzcWbCfNJCDNnLwEbBnNfNqEdEh[`@MtBhZREXbEjAKGaBVE"]
+    };
     /* ROUTE_DATA_END */
     function routeData(p) { return walking[p.id] || driving[p.id]; }
     function modeText(p) { return walking[p.id] ? '步行' : '驾车'; }
