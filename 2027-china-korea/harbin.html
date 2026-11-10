@@ -151,7 +151,7 @@
         <a class="back-home" href="index.html">← 行程首页</a>
         <div class="eyebrow">Harbin · winter 2027</div>
         <h1>住在住处，慢慢逛哈尔滨</h1>
-        <p class="sub">以「老道外住处」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。</p>
+        <p class="sub">以「老道外住处」为出发点，按每天一个主要活动的节奏轻松游哈尔滨。选地点可查看从老道外街区中心估算的路线；近处按步行，远处按驾车。距离取自 <a href="https://project-osrm.org/" target="_blank" rel="noopener noreferrer">OSRM</a> / OpenStreetMap，时间留有冬季交通缓冲，并非实时路况。江面、步行街与景区以开放入口为准。</p>
         <div class="tripline"><span>1月10日—16日 · 6晚</span><span>家庭出行</span></div>
         <div class="tripline"><span>✈ 1月10日 13:35 抵达 HRB T2</span><span>✈ 1月16日 18:05 离开 HRB</span></div>
         <a class="home" href="https://www.openstreetmap.org/search?query=Daowai%20Harbin" target="_blank" rel="noopener noreferrer">
@@ -226,7 +226,6 @@
     <section class="mapwrap" aria-label="哈尔滨互动地图">
       <div id="map"></div>
       <div class="map-fallback" id="fallback">底图暂时无法加载。地点清单仍可使用，点击地点后可打开高德地图。</div>
-      <div class="note">虚线和数字是<strong>直线距离</strong>，不是步行或车程；1 月出行请按天气选择交通。</div>
       <div class="maptools"><button id="nearby" type="button">看住处周围</button><button id="airportbtn" type="button">✈ 看机场</button><button id="overview" type="button">看全部地点</button></div>
       <article class="detail" id="detail" aria-live="polite"></article>
     </section>
@@ -274,30 +273,66 @@
     const typeName = {home:'住宿',sight:'景点与体验',food:'吃东西',mall:'商场',transport:'机场交通'};
     const typeOrder = {transport:0,sight:1,food:2,mall:3};
     const $ = id => document.getElementById(id);
-    let filter = 'all', query = '', selected = home, map, markers = new Map(), route;
-
-    function km(a,b) {
-      const r=Math.PI/180, dLat=(b.lat-a.lat)*r, dLon=(b.lon-a.lon)*r;
-      const x=Math.sin(dLat/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dLon/2)**2;
-      return 6371*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+    let filter = 'all', query = '', selected = home, map, markers = new Map(), routeLayer;
+    /* ROUTE_DATA_START */
+    // Public route origin is the approximate Old Daowai district marker.
+    const driving = {"airport":[38466,1749,"kclvGuq|cWhGlRxj@qWxb@~gCjyD~`Dv{DljGtlFptVt{BhgTwOtnBhHbhCfq@rpCrqAfbBlSgF"],"baroque":[0,0,""],"central":[3110,173,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@|VaFb@bAxArP"],"sophia":[2548,149,"kclvGuq|cWhGlRxj@qWhMtg@fCzNxD|YsIrCr@tF"],"flood":[2944,188,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA~A~XsMhC}BlApFhU`@H"],"rivercarnival":[2896,184,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpMbFp@pBrAlWsMhC}BlAxEjS"],"railbridge":[12918,1164,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@jFSlA|B[zCkBZgAyAP_DbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@sAlAa_@}hAbDmAtCyKsIih@"],"zhaolin":[3065,176,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@|VaFuJxA"],"ice":[10656,566,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@jFSnA|C]zBuBTcAsBV_CbBk@lArByBlI_qBvvCiK_WcABAjAdAv@zPna@U`CyNdV`OgU"],"tiger":[14549,767,"kclvGuq|cWbGvQqb@jSsTs`AsMi[_Q_{@zSsOqeBv_A}pBz~@cbAtFgSvHvaAlsD`Rh~@`]|x@rIk[rRy^"],"theatre":[13082,690,"kclvGuq|cWbGvQqb@jSsTs`AsMi[_Q_{@zSsOqeBv_AitB|`Ap@hAvRgJtIdf@ji@zrBjPnUhAlL|J}D|AbTiCjjBiJzL"],"bath":[9918,495,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@vNr^`bAjz@pKxXtDjD`EWro@mc@vr@re@hg@l~@`Cf{@mH`C"],"guandong":[10037,509,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@vNr^`bAjz@pKxXfEtDbu@od@xq@xd@|g@h~@nCl}@SwS"],"binguo":[4138,218,"kclvGuq|cWhGlRxj@qWhMtg@~BzMlHpj@dDn]~@bEzUdPwEl]aIhW"],"sun":[11959,845,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@lGBf@fEkApA{ASi@aBV_CbBk@lArByBlIuxA|uB}`@uv@cRoh@fAmCaDcLxNiNzCpCoNkb@mUrSaEcKyLpKsAo@"],"polar":[9626,529,"kclvGuq|cWbGvQic@xSrLhh@fSnL`Ezw@jNdt@jPv`@l`Afx@lGBj@hD[vA_CPy@oBV_CbBk@lArByBlIuxA|uB{]gq@mLmYgD|CaCg@ByA"],"hayao":[6957,397,"kclvGuq|cWhGlRvAm@r[{cAvAi@RiEpIsYta@{{@rLgLDoF_YenEe@mWdAuAl[wFh@pIyDp@"],"volga":[28295,1685,"kclvGuq|cW`J~Ppi@cfBpq@_nA|wBtHpL`Tdh@en@v~@sXwg@o}Dpp@wzIfo@ieFnf@rPzCsl@|l@o~DrQki@zB{{@|R}sA|r@umAd_Aix@xf@ecA{DcV"],"songsong":[9422,494,"kclvGuq|cWhGlRvAm@j^eeAdJ}_@ta@{{@bKkIvBwF|wBtHdNjUz`DbpBuUqP"],"market":[2269,157,"kclvGuq|cWhGlR|YiN`Lbr@xH|n@dH{B"],"hongjiang":[880,58,"kclvGuq|cWdBzE|CzJkPzHoHeP"],"laodingfeng":[923,61,"kclvGuq|cWdBzE|CzJkPzHqGgNcA_D"],"laochujia":[3220,199,"kclvGuq|cWbGvQic@xS`Hb]vAzFzBxDfC~AvJhDdAtA|Bld@h_@mHdA`P"],"madierice":[3243,203,"kclvGuq|cWbGvQic@xS`Hb]vAzFzBxDfC~AvJhDdAtA|Bld@h_@mHlA|Q"],"shanhetun":[2612,174,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA|Bld@dAQj@jK"],"springpancake":[2461,154,"kclvGuq|cWbGvQic@xS`J`c@pAfDzAhBlBdAbGpBpOkHvAzQmC`@"],"russiandine":[1482,143,"kclvGuq|cWrDrKhB`Hp@t@eAb@|@fF{@lCcBlCfAhIxHfBdCdNfD|X"],"madierdine":[3182,186,"kclvGuq|cWbGvQic@xS`J`c@pAfDzAhBdNnFdAtA|Bld@~b@qId@xG"],"parkson":[2731,139,"kclvGuq|cWbGvQic@xS`Hb]pCdJnCjCpLlEdAtA`Ezw@l@dD"],"jinan":[3366,201,"kclvGuq|cWbGvQic@xSxJ~d@tCrEdNnFdAtA|Bld@hj@uKv@xK"]};
+    const walking = {"baroque":[0,0,""],"hongjiang":[328,262,"yjlvGoj|cWOe@cGrIcA}BfAyA"],"laodingfeng":[337,270,"yjlvGoj|cWOe@cGrIsA}Cg@iB"],"russiandine":[1612,1290,"yjlvGoj|cWrClIlG_DhB`Hp@t@eAb@|@fF{@lCcBlCfAhIxHfBdCdNfD|X"]};
+    /* ROUTE_DATA_END */
+    function routeData(p) { return walking[p.id] || driving[p.id]; }
+    function modeText(p) { return walking[p.id] ? '步行' : '驾车'; }
+    function distanceText(p) {
+      const meters=routeData(p)?.[0];
+      if (meters==null) return '路线待查';
+      if (meters<50) return '街区内';
+      return meters<1000 ? `${Math.round(meters/50)*50} 米` : `${(meters/1000).toFixed(1)} 公里`;
     }
-    function distanceText(p) { const d=km(home,p); return d<1 ? `${Math.round(d*1000/50)*50} 米` : `${d.toFixed(1)} 公里`; }
+    function durationText(p) {
+      const seconds=routeData(p)?.[1];
+      if (seconds==null) return '';
+      if (seconds===0) return '就在附近';
+      if (p.id==='airport') return '预留 60–90 分钟';
+      const minutes=seconds/60;
+      if (walking[p.id]) {
+        const low=Math.max(5,Math.ceil(minutes*1.2/5)*5);
+        const high=Math.max(low+5,Math.ceil(minutes*1.5/5)*5);
+        return `约 ${low}–${high} 分钟`;
+      }
+      const low=Math.max(10,Math.ceil((minutes*1.5+5)/5)*5);
+      const high=Math.max(low+5,Math.ceil((minutes*2.3+10)/5)*5);
+      return `预留 ${low}–${high} 分钟`;
+    }
+    function decodePolyline(encoded) {
+      let index=0, lat=0, lon=0;
+      const points=[];
+      while (index<encoded.length) {
+        const deltas=[];
+        for (let axis=0; axis<2; axis++) {
+          let value=0, shift=0, byte;
+          do { byte=encoded.charCodeAt(index++)-63; value|=(byte&31)<<shift; shift+=5; } while (byte>=32);
+          deltas.push(value&1 ? ~(value>>1) : value>>1);
+        }
+        lat+=deltas[0]; lon+=deltas[1];
+        points.push([lat/1e5,lon/1e5]);
+      }
+      return points;
+    }
     function amap(p) { return `https://uri.amap.com/search?keyword=${encodeURIComponent(p.search)}&city=${encodeURIComponent('哈尔滨')}`; }
     function matching(p) { return (filter==='all'||p.type===filter) && (!query || `${p.name} ${p.area} ${p.tag||''}`.toLowerCase().includes(query)); }
     function renderList() {
-      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || km(home,a)-km(home,b));
-      $('count').textContent=`${visible.length} 个地点 · 按类别及距离排列`;
+      const visible=spots.filter(matching).sort((a,b)=>typeOrder[a.type]-typeOrder[b.type] || (routeData(a)?.[0]??Infinity)-(routeData(b)?.[0]??Infinity));
+      $('count').textContent=`${visible.length} 个地点 · 按类别及路线距离排列`;
       $('places').replaceChildren();
       if (!visible.length) { const e=document.createElement('div'); e.className='empty'; e.textContent='没有找到相符的地点。试试其他关键字或切换类别。'; $('places').append(e); }
       visible.forEach(p=>{
         const b=document.createElement('button'); b.type='button'; b.className=`place${selected.id===p.id?' selected':''}`; b.dataset.type=p.type;
-        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${distanceText(p)} ↗</span>`;
+        b.innerHTML=`<span class="placeicon" aria-hidden="true">${p.icon}</span><span><strong>${p.name}</strong><small>${p.area} · ${p.tag||typeName[p.type]}</small></span><span class="distance">${modeText(p)} ${distanceText(p)}<br>${durationText(p)} ↗</span>`;
         b.addEventListener('click',()=>select(p,true)); $('places').append(b);
       });
     }
     function renderDetail() {
       const p=selected, isHome=p.id==='home';
-      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿基点':`距住处直线约 ${distanceText(p)}`}</span><span>${isHome?'2027.01.10—01.16':p.tag}</span></div><div class="detail-actions"><a href="${amap(p)}" target="_blank" rel="noopener noreferrer">在高德地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">地点资料 ↗</a></div>`;
+      $('detail').innerHTML=`<div class="detail-kind">${typeName[p.type]} · ${p.area}</div><h2>${p.icon} ${p.name}</h2><p>${p.blurb}</p><div class="detail-meta"><span>${isHome?'住宿基点':`距住处：${modeText(p)} ${distanceText(p)} · ${durationText(p)}`}</span><span>${isHome?'2027.01.10—01.16':p.tag}</span></div><div class="detail-actions"><a href="${amap(p)}" target="_blank" rel="noopener noreferrer">在高德地图查看 ↗</a><a class="secondary" href="${p.source}" target="_blank" rel="noopener noreferrer">地点资料 ↗</a></div>`;
     }
     function makeIcon(p, active=false) {
       return L.divIcon({className:'',html:`<span class="pin ${p.type==='home'?'homepin':p.type}${active?' selected':''}" aria-hidden="true">${p.icon}</span>`,iconSize:[32,32],iconAnchor:[16,16]});
@@ -306,9 +341,11 @@
       selected=p; renderList(); renderDetail();
       if (!map) return;
       markers.forEach((marker,id)=>{ const on=id===p.id; marker.setIcon(makeIcon(all.find(x=>x.id===id),on)); marker.setZIndexOffset(on?1000:0); if (on) marker.openTooltip(); else marker.closeTooltip(); });
-      if (route) map.removeLayer(route);
-      if (p.id!=='home') route=L.polyline([[home.lat,home.lon],[p.lat,p.lon]],{color:'#e6a550',weight:3,dashArray:'6 7',opacity:.9}).addTo(map);
-      if (move) map.flyTo([p.lat,p.lon],p.id==='home'?14:Math.max(map.getZoom(),13),{duration:.7});
+      if (routeLayer) { map.removeLayer(routeLayer); routeLayer=undefined; }
+      if (p.id!=='home' && routeData(p)?.[2]) {
+        routeLayer=L.polyline(decodePolyline(routeData(p)[2]),{color:walking[p.id]?'#30a9a0':'#e6a550',weight:5,opacity:.95}).addTo(map);
+        map.fitBounds(routeLayer.getBounds(),{paddingTopLeft:[24,24],paddingBottomRight:[24,140],maxZoom:14});
+      } else if (move) map.flyTo([p.lat,p.lon],14,{duration:.7});
     }
     function updateMarkers() {
       if (!map) return;
